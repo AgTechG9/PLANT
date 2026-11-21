@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy only backend application code
 COPY backend/ .
 
-ENV PORT=8000
+
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
