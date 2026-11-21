@@ -5,10 +5,11 @@ import '../models/diagnostic_result.dart';
 import '../models/user_session.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android emulator, localhost for Web/macOS
+  // Production live Railway backend URL with environment override
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8000/api/v1';
-    return 'http://10.0.2.2:8000/api/v1';
+    const fromEnv = String.fromEnvironment('BACKEND_URL');
+    if (fromEnv.isNotEmpty) return fromEnv;
+    return 'https://plant-api-production-7a007e06.up.railway.app/api/v1';
   }
 
   // 1. Authenticate with Username & Password (ADMIN, AGENT, FARMER)
