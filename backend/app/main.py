@@ -1,0 +1,57 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.core.config import settings
+from app.core.database import engine, Base, SessionLocal
+from app.initial_data import seed_database
+from app.api.v1 import health, farmers, cases, knowledge, sms, ussd, diagnostics
+
+# Create DB tables
+Base.metadata.create_all(bind=engine)
+
+# Seed database with initial Liberian agricultural data
+db = SessionLocal()
+try:
+    seed_database(db)
+finally:
+    db.close()
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="PLANT: AI Smart Farming Assistant - Backend Platform API (Liberia AgTech Hackathon 2026)",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount API Routers
+app.include_router(health.router, prefix=settings.API_V1_STR, tags=["Health & Telemetry"])
+app.include_router(farmers.router, prefix=settings.API_V1_STR, tags=["Farmers"])
+app.include_router(cases.router, prefix=settings.API_V1_STR, tags=["Cases & Triage"])
+app.include_router(knowledge.router, prefix=settings.API_V1_STR, tags=["Knowledge Base (CARI)"])
+app.include_router(sms.router, prefix=settings.API_V1_STR, tags=["SMS & Broadcast"])
+app.include_router(ussd.router, prefix=settings.API_V1_STR, tags=["USSD Engine (*123#)"])
+app.include_router(diagnostics.router, prefix=settings.API_V1_STR, tags=["Diagnostics & Safety"])
+
+@app.get("/")
+def root():
+    return {
+        "app": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "online",
+        "docs": f"{settings.API_V1_STR}/docs",
+        "health": f"{settings.API_V1_STR}/health"
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
