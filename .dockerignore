@@ -1,0 +1,9 @@
+.git
+.github
+apps/
+backend-dotnet/
+.venv/
+__pycache__/
+*.pyc
+*.md
+*.log
