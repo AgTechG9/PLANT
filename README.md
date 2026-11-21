@@ -73,12 +73,15 @@ dotnet run
 - Farmers API: `http://localhost:5124/api/v1/farmers`
 - Cases API: `http://localhost:5124/api/v1/cases`
 
-### 4. Desktop Admin Workstation (.NET 10) (`apps/desktop/`)
+### 4. Desktop Admin Workstation (GUI & CLI) (`apps/desktop/`)
 ```bash
-# 1-Click Launch (auto-detects pre-built binary or runs via dotnet)
-./run_desktop_admin.sh
+# A. 1-Click Launch GUI Window (Deep Forest / Harvest Gold theme)
+./run_desktop_window.sh
+# Or view in any browser: http://localhost:8000/admin
 
-# Or run via dotnet CLI
+# B. 1-Click Launch CLI Workstation (.NET 10 console)
+./run_desktop_admin.sh
+# Or run via dotnet CLI:
 dotnet run --project apps/desktop/Plant.DesktopAdmin.csproj
 ```
 - **6 Integrated Workstation Modules:**

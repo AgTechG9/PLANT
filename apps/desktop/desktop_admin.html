@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLANT AI · Desktop Admin Workstation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ========== BRAND TOKENS ========== */
+:root {
+  --deep-forest: #1B3F32;
+  --growth-green: #6FBF48;
+  --harvest-gold: #E5B95C;
+  --ivory: #F6F4EC;
+  --charcoal: #292F2A;
+  --bg: #0F1A14;
+  --bg-card: #162019;
+  --bg-card-hover: #1C2A22;
+  --bg-sidebar: #0D1610;
+  --border: #2A3D30;
+  --border-light: #354A3C;
+  --text: #E8EDE9;
+  --text-muted: #8FA396;
+  --text-dim: #5F7566;
+  --danger: #E05252;
+  --danger-bg: #2A1515;
+  --warning-bg: #2A2415;
+  --info: #4BA3C7;
+  --info-bg: #152025;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ========== LAYOUT ========== */
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+}
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-brand {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-brand h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--growth-green);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar-brand h1 span { font-size: 24px; }
+.sidebar-brand p {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+}
+.nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 12px 12px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  position: relative;
+}
+.nav-item:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--deep-forest);
+  color: var(--growth-green);
+  font-weight: 600;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--growth-green);
+}
+.nav-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+.sidebar-status {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+}
+.status-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse-dot 2s infinite;
+}
+.status-dot.online { background: var(--growth-green); }
+.status-dot.offline { background: var(--danger); animation: none; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ========== MAIN CONTENT ========== */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sidebar);
+  min-height: 56px;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.topbar-title small {
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 8px;
+  font-size: 12px;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-xs);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn:hover { background: var(--bg-card-hover); border-color: var(--border-light); }
+.btn-primary {
+  background: var(--deep-forest);
+  border-color: var(--growth-green);
+  color: var(--growth-green);
+}
+.btn-primary:hover { background: #1e4d3c; }
+.btn-danger {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn-gold {
+  background: var(--warning-bg);
+  border-color: var(--harvest-gold);
+  color: var(--harvest-gold);
+}
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+
+/* ========== CARDS ========== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all var(--transition);
+}
+.card:hover { border-color: var(--border-light); }
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .icon { font-size: 14px; }
+
+/* ========== KPI GRID ========== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.kpi {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi.green::after { background: var(--growth-green); }
+.kpi.gold::after { background: var(--harvest-gold); }
+.kpi.red::after { background: var(--danger); }
+.kpi.blue::after { background: var(--info); }
+.kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ========== TABLE ========== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.data-table tbody tr:hover { background: var(--bg-card-hover); }
+.data-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+/* ========== BADGES ========== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.badge-green { background: rgba(111,191,72,0.15); color: var(--growth-green); }
+.badge-red { background: rgba(224,82,82,0.15); color: var(--danger); }
+.badge-gold { background: rgba(229,185,92,0.15); color: var(--harvest-gold); }
+.badge-blue { background: rgba(75,163,199,0.15); color: var(--info); }
+.badge-muted { background: rgba(143,163,150,0.12); color: var(--text-muted); }
+
+/* ========== CONFIDENCE BAR ========== */
+.conf-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.conf-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  max-width: 100px;
+}
+.conf-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.conf-fill.high { background: var(--growth-green); }
+.conf-fill.med { background: var(--harvest-gold); }
+.conf-fill.low { background: var(--danger); }
+
+/* ========== MODULE PANELS ========== */
+.module-panel { display: none; }
+.module-panel.active { display: block; }
+
+/* ========== MODAL ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* ========== FORM ========== */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--growth-green);
+}
+.form-textarea { resize: vertical; min-height: 60px; }
+.char-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+  margin-top: 4px;
+}
+.char-count.over { color: var(--danger); font-weight: 700; }
+
+/* ========== USSD PHONE ========== */
+.ussd-phone {
+  max-width: 340px;
+  margin: 20px auto;
+  background: var(--charcoal);
+  border-radius: 24px;
+  padding: 24px 20px;
+  border: 2px solid var(--border-light);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.ussd-screen {
+  background: #0a120d;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-height: 180px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--growth-green);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+.ussd-carrier {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.ussd-input-row {
+  display: flex;
+  gap: 8px;
+}
+.ussd-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.ussd-input-row input:focus { border-color: var(--growth-green); }
+.ussd-input-row button {
+  padding: 10px 20px;
+  background: var(--growth-green);
+  border: none;
+  border-radius: 20px;
+  color: var(--deep-forest);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ussd-input-row button:hover { background: #7dd454; }
+
+/* ========== HEALTH TILES ========== */
+.health-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.health-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.health-tile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.health-tile-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.health-detail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ========== SMS LOG ========== */
+.sms-log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sms-log-item:last-child { border-bottom: none; }
+.sms-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.sms-icon.outbound { background: rgba(111,191,72,0.15); }
+.sms-body { flex: 1; }
+.sms-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.sms-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border-radius: var(--radius-xs);
+  border-left: 3px solid var(--border);
+}
+
+/* ========== KNOWLEDGE CARDS ========== */
+.knowledge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.knowledge-card:hover { border-color: var(--growth-green); }
+.knowledge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.knowledge-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.knowledge-detail {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 6px 12px;
+  font-size: 12px;
+}
+.knowledge-detail dt {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.knowledge-detail dd {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ========== TRIAGE CASE CARD ========== */
+.case-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 14px;
+  border-left: 4px solid var(--danger);
+}
+.case-card.resolved { border-left-color: var(--growth-green); opacity: 0.7; }
+.case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.case-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.case-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.case-meta-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.case-meta-value {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ========== DIAG RESULT ========== */
+.diag-result {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+}
+.diag-result.supported { border-color: var(--growth-green); }
+.diag-result.unsupported { border-color: var(--danger); }
+.diag-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ========== SKELETON LOADING ========== */
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--border-light) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-xs);
+  height: 20px;
+  margin-bottom: 8px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ========== TOAST ========== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--deep-forest);
+  border: 1px solid var(--growth-green);
+  color: var(--growth-green);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 200;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+
+/* ========== RESPONSIVE ========== */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1100px) {
+  .two-col { grid-template-columns: 1fr; }
+  .health-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1><span>🌿</span> PLANT AI</h1>
+      <p>CARI Suakoko · Admin Workstation</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Core Modules</div>
+      <div class="nav-item active" data-module="mission" onclick="switchModule('mission')">
+        <span class="nav-icon">📡</span> Mission Control
+      </div>
+      <div class="nav-item" data-module="triage" onclick="switchModule('triage')">
+        <span class="nav-icon">🔬</span> Escalation Triage
+        <span class="nav-badge" id="triage-badge">0</span>
+      </div>
+      <div class="nav-item" data-module="farmers" onclick="switchModule('farmers')">
+        <span class="nav-icon">👥</span> Farmer Directory
+      </div>
+      <div class="nav-item" data-module="ussd" onclick="switchModule('ussd')">
+        <span class="nav-icon">📱</span> USSD & SMS Lab
+      </div>
+      <div class="nav-item" data-module="knowledge" onclick="switchModule('knowledge')">
+        <span class="nav-icon">📖</span> Knowledge Base
+      </div>
+      <div class="nav-item" data-module="validator" onclick="switchModule('validator')">
+        <span class="nav-icon">🛡️</span> AI Safety Validator
+      </div>
+    </nav>
+    <div class="sidebar-status">
+      <span class="status-dot online" id="status-dot"></span>
+      <span id="status-text" style="color: var(--text-muted);">Connecting...</span>
+      <div style="margin-top: 6px; color: var(--text-dim); font-size: 10px;" id="api-url-display">localhost:8000</div>
+    </div>
+  </aside>
+
+  <!-- ========== MAIN ========== -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="topbar-title">
+        Mission Control & Telemetry <small>Live system health & national KPIs</small>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm" onclick="refreshCurrentModule()">↻ Refresh</button>
+        <button class="btn btn-sm btn-primary" onclick="showApiConfigModal()">⚙ API Target</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- MODULE 1: MISSION CONTROL -->
+      <div class="module-panel active" id="panel-mission">
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi green"><div class="kpi-value" id="kpi-farmers">—</div><div class="kpi-label">Enrolled Farmers</div><div class="kpi-sub" id="kpi-county-dist"></div></div>
+          <div class="kpi gold"><div class="kpi-value" id="kpi-female">—</div><div class="kpi-label">Female Ratio (54% Target)</div><div class="kpi-sub" id="kpi-female-sub"></div></div>
+          <div class="kpi red"><div class="kpi-value" id="kpi-triage">—</div><div class="kpi-label">Pending Triage</div><div class="kpi-sub">Rule SCAN-04 Escalated</div></div>
+          <div class="kpi blue"><div class="kpi-value" id="kpi-livestock">—</div><div class="kpi-label">Livestock Interest</div><div class="kpi-sub">Rule REG-03 "Coming Soon"</div></div>
+        </div>
+
+        <div class="health-row" id="health-row">
+          <div class="health-tile">
+            <div class="health-tile-header">
+              <span class="health-tile-label">🗄 Database</span>
+              <span class="badge badge-muted" id="health-db-badge">...</span>
+            </div>
+            <div class="health-detail" id="health-db-detail">Checking...</div>
+          </div>
+          <div class="health-tile">
+            <div class="health-tile-header">
+              <span class="health-tile-label">🤖 Vision AI</span>
+              <span class="badge badge-muted" id="health-ai-badge">...</span>
+            </div>
+            <div class="health-detail" id="health-ai-detail">Checking...</div>
+          </div>
+          <div class="health-tile">
+            <div class="health-tile-header">
+              <span class="health-tile-label">📶 SMS Gateway</span>
+              <span class="badge badge-muted" id="health-sms-badge">...</span>
+            </div>
+            <div class="health-detail" id="health-sms-detail">Checking...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="icon">📨</span> Live SMS Event Feed</div>
+          <div id="sms-feed">Loading...</div>
+        </div>
+      </div>
+
+      <!-- MODULE 2: TRIAGE -->
+      <div class="module-panel" id="panel-triage">
+        <div class="card" style="background: var(--danger-bg); border-color: rgba(224,82,82,0.3); margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 28px;">⚠️</span>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Master Escalation Workbench</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Review scans flagged under <strong>Rule SCAN-04</strong> (&lt;65% AI confidence or blurry images). Inspect leaf photo alongside AI diagnosis, then dispatch CARI-verified 160-char SMS to farmer.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="triage-list">Loading triage queue...</div>
+      </div>
+
+      <!-- MODULE 3: FARMERS -->
+      <div class="module-panel" id="panel-farmers">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+          <input type="text" class="form-input" id="farmer-search" placeholder="Search farmer name or phone..." style="max-width: 300px;" oninput="debounceFarmerSearch()">
+          <select class="form-select" id="farmer-county-filter" style="max-width: 160px;" onchange="loadFarmers()">
+            <option value="">All Counties</option>
+            <option value="Bong">Bong</option>
+            <option value="Nimba">Nimba</option>
+            <option value="Lofa">Lofa</option>
+            <option value="Margibi">Margibi</option>
+          </select>
+          <div style="margin-left: auto;">
+            <button class="btn btn-danger" onclick="showBroadcastModal()">📡 Emergency Broadcast</button>
+          </div>
+        </div>
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <table class="data-table" id="farmer-table">
+            <thead><tr>
+              <th>Name</th><th>County</th><th>District</th><th>Gender</th><th>Phone</th><th>Language</th><th>Consent</th><th>Livestock</th>
+            </tr></thead>
+            <tbody id="farmer-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODULE 4: USSD & SMS -->
+      <div class="module-panel" id="panel-ussd">
+        <div class="two-col">
+          <div>
+            <div class="card-title" style="margin-bottom: 14px;"><span class="icon">📱</span> Virtual *123# USSD Dialer</div>
+            <div class="ussd-phone">
+              <div class="ussd-carrier">ORANGE LIBERIA · *123#</div>
+              <div class="ussd-screen" id="ussd-screen">Dial *123# to begin session...</div>
+              <div class="ussd-input-row">
+                <input type="text" id="ussd-input" placeholder="Enter option..." onkeydown="if(event.key==='Enter')sendUssd()">
+                <button onclick="sendUssd()">Send</button>
+              </div>
+              <div style="text-align: center; margin-top: 12px;">
+                <button class="btn btn-sm" onclick="resetUssd()">📞 New Session</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom: 14px;"><span class="icon">📋</span> SMS Packet Inspector</div>
+            <div class="card" style="max-height: 500px; overflow-y: auto;" id="sms-inspector">Loading logs...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE 5: KNOWLEDGE BASE -->
+      <div class="module-panel" id="panel-knowledge">
+        <div class="card" style="background: var(--info-bg); border-color: rgba(75,163,199,0.3); margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 28px;">📖</span>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">CARI Vetted Knowledge Base — Rule ADV-01 Audit</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                All agricultural chemical & cultural advice is <strong>strictly grounded</strong> in CARI extension guides with document IDs. Zero hallucinations — every SMS template is pre-approved.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+          <button class="btn btn-primary btn-sm" onclick="loadKnowledge('ALL')">All</button>
+          <button class="btn btn-sm" onclick="loadKnowledge('Cassava')">🌿 Cassava</button>
+          <button class="btn btn-sm" onclick="loadKnowledge('Pepper')">🌶 Pepper</button>
+        </div>
+        <div id="knowledge-list">Loading...</div>
+      </div>
+
+      <!-- MODULE 6: AI SAFETY VALIDATOR -->
+      <div class="module-panel" id="panel-validator">
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-title"><span class="icon">🛡️</span> AI Diagnostic Safety Validator</div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+            Test the vision engine's guardrails. Supported crops (Cassava, Pepper) return confidence-scored diagnoses. Unsupported crops trigger <strong>Rule SCAN-03</strong>: an explicit warning instead of hallucinated results.
+          </p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="runDiagnostic('Cassava')">🌿 Test Cassava</button>
+            <button class="btn btn-primary" onclick="runDiagnostic('Pepper')">🌶 Test Pepper</button>
+            <button class="btn btn-danger" onclick="runDiagnostic('Maize')">🌽 Test Maize (UNSUPPORTED)</button>
+            <button class="btn btn-danger" onclick="runDiagnostic('Cocoa')">🍫 Test Cocoa (UNSUPPORTED)</button>
+            <button class="btn btn-gold" onclick="runDiagnostic('Rice')">🌾 Test Rice (UNSUPPORTED)</button>
+          </div>
+        </div>
+        <div id="diag-result-area"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ========== RESOLVE CASE MODAL ========== -->
+<div class="modal-overlay" id="resolve-modal">
+  <div class="modal">
+    <div class="modal-title">✅ Resolve Escalated Case <span id="resolve-case-num" style="color: var(--harvest-gold);"></span></div>
+    <div class="form-group">
+      <label class="form-label">Select CARI-Approved Resolution</label>
+      <select class="form-select" id="resolve-preset" onchange="applyResolvePreset()">
+        <option value="">— Select Pre-Vetted Advice —</option>
+        <option value="cmd">CARI-CAS-001: CMD (Uproot & Spray Neem)</option>
+        <option value="cbsd">CARI-CAS-002: CBSD (Early Harvest & Remove Cuttings)</option>
+        <option value="anth">CARI-PEP-001: Pepper Anthracnose (Remove Pods & Spray Mancozeb)</option>
+        <option value="wilt">CARI-PEP-002: Bacterial Wilt (Remove Root Ball)</option>
+        <option value="blurry">Request New Photo (Blurry/Bad Lighting)</option>
+        <option value="custom">Custom Officer Diagnostic</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Officer Verification Notes</label>
+      <textarea class="form-textarea" id="resolve-notes" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">160-Character SMS to Farmer (Rule ADV-01)</label>
+      <textarea class="form-textarea" id="resolve-sms" rows="3" oninput="updateSmsCount('resolve-sms','resolve-sms-count')"></textarea>
+      <div class="char-count" id="resolve-sms-count">0/160</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('resolve-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitResolve()">📤 Dispatch SMS & Resolve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BROADCAST MODAL ========== -->
+<div class="modal-overlay" id="broadcast-modal">
+  <div class="modal">
+    <div class="modal-title">📡 Emergency SMS Broadcast</div>
+    <div class="form-group">
+      <label class="form-label">Target County</label>
+      <select class="form-select" id="broadcast-county">
+        <option value="ALL">ALL Counties (National Alert)</option>
+        <option value="Bong">Bong County</option>
+        <option value="Nimba">Nimba County</option>
+        <option value="Lofa">Lofa County</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quick Templates</label>
+      <select class="form-select" id="broadcast-template" onchange="applyBroadcastTemplate()">
+        <option value="">— Write Custom —</option>
+        <option value="rain">🌧 Heavy Rain Advisory</option>
+        <option value="pest">🐛 Pest Infestation Alert</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Broadcast Message (≤160 characters)</label>
+      <textarea class="form-textarea" id="broadcast-msg" rows="3" oninput="updateSmsCount('broadcast-msg','broadcast-count')"></textarea>
+      <div class="char-count" id="broadcast-count">0/160</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('broadcast-modal')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitBroadcast()">📡 Dispatch to Farmers</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== API CONFIG MODAL ========== -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <div class="modal-title">⚙ Configure API Target</div>
+    <div class="form-group">
+      <label class="form-label">Backend API Base URL</label>
+      <input type="text" class="form-input" id="api-url-input" value="http://localhost:8000/api/v1">
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+      <button class="btn btn-sm" onclick="document.getElementById('api-url-input').value='http://localhost:8000/api/v1'">Local (8000)</button>
+      <button class="btn btn-sm" onclick="document.getElementById('api-url-input').value='https://plant-production.up.railway.app/api/v1'">Railway</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('api-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveApiUrl()">Save & Reconnect</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===========================
+// STATE
+// ===========================
+let API_BASE = localStorage.getItem('plant_api_url') || 'http://localhost:8000/api/v1';
+let currentModule = 'mission';
+let ussdSessionId = 'USSD-' + Math.random().toString(36).substr(2, 8);
+let ussdText = '';
+let ussdActive = false;
+let resolvingCaseId = null;
+let searchTimer = null;
+
+const MODULES = {
+  mission: { title: 'Mission Control & Telemetry', sub: 'Live system health & national KPIs' },
+  triage: { title: 'Master Escalation Workbench', sub: 'Rule SCAN-04 — <65% confidence & blurry scans' },
+  farmers: { title: 'Farmer Directory & Broadcast', sub: 'Bong · Nimba · Lofa counties' },
+  ussd: { title: 'USSD Engine & SMS Testbench', sub: 'Virtual *123# Orange Liberia dialer' },
+  knowledge: { title: 'CARI Knowledge Base', sub: 'Rule ADV-01 — Zero hallucination audit' },
+  validator: { title: 'AI Safety Validator', sub: 'Rule SCAN-03 — Unsupported crop guardrail' },
+};
+
+// ===========================
+// API HELPERS
+// ===========================
+async function api(path, opts = {}) {
+  const url = API_BASE.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+  try {
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...opts.headers },
+      ...opts,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.error('API Error:', e);
+    return null;
+  }
+}
+
+// ===========================
+// NAVIGATION
+// ===========================
+function switchModule(mod) {
+  currentModule = mod;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.module === mod));
+  document.querySelectorAll('.module-panel').forEach(el => el.classList.toggle('active', el.id === 'panel-' + mod));
+  const m = MODULES[mod];
+  document.getElementById('topbar-title').innerHTML = `${m.title} <small>${m.sub}</small>`;
+  loadModuleData(mod);
+}
+
+function refreshCurrentModule() { loadModuleData(currentModule); }
+
+function loadModuleData(mod) {
+  const loaders = {
+    mission: loadMission,
+    triage: loadTriage,
+    farmers: loadFarmers,
+    ussd: loadSmsInspector,
+    knowledge: () => loadKnowledge('ALL'),
+    validator: () => {},
+  };
+  if (loaders[mod]) loaders[mod]();
+}
+
+// ===========================
+// MODULE 1: MISSION CONTROL
+// ===========================
+async function loadMission() {
+  const [health, metrics, cases, logs] = await Promise.all([
+    api('health'),
+    api('farmers/metrics'),
+    api('cases?status=PENDING_ESCALATION'),
+    api('sms/logs?limit=8'),
+  ]);
+
+  // Status indicator
+  const dot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  if (health) {
+    dot.className = 'status-dot online';
+    statusText.textContent = `${health.status.toUpperCase()} · v${health.version}`;
+    statusText.style.color = 'var(--growth-green)';
+  } else {
+    dot.className = 'status-dot offline';
+    statusText.textContent = 'OFFLINE';
+    statusText.style.color = 'var(--danger)';
+  }
+
+  // KPIs
+  if (metrics) {
+    document.getElementById('kpi-farmers').textContent = metrics.total_farmers;
+    document.getElementById('kpi-county-dist').textContent = Object.entries(metrics.by_county || {}).map(([k,v]) => `${k}: ${v}`).join(' · ');
+    const pct = metrics.female_ratio_pct;
+    document.getElementById('kpi-female').textContent = pct.toFixed(1) + '%';
+    document.getElementById('kpi-female-sub').innerHTML = `${metrics.female_farmers}/${metrics.total_farmers} female ${pct >= 50 ? '<span style="color:var(--growth-green)">✓ On Track</span>' : '<span style="color:var(--danger)">⚠ Below Target</span>'}`;
+    document.getElementById('kpi-livestock').textContent = metrics.livestock_interest_count;
+  }
+
+  const triageCount = cases ? cases.length : 0;
+  document.getElementById('kpi-triage').textContent = triageCount;
+  document.getElementById('triage-badge').textContent = triageCount;
+  document.getElementById('triage-badge').style.display = triageCount > 0 ? 'inline' : 'none';
+
+  // Health tiles
+  if (health) {
+    const db = health.database || {};
+    setHealthTile('db', db.status === 'connected' ? 'green' : 'red', db.status || 'unknown',
+      `Engine: ${db.engine || 'N/A'}<br>Latency: ${db.latency_ms?.toFixed(1) || '?'}ms`);
+    const ai = health.ai_service || {};
+    setHealthTile('ai', ai.status === 'online' ? 'green' : 'red', ai.status || 'unknown',
+      `Model: ${ai.model || 'N/A'}<br>Threshold: ${((ai.confidence_threshold || 0) * 100).toFixed(0)}%<br>Crops: ${(ai.supported_crops || []).join(', ')}`);
+    const sms = health.sms_service || {};
+    setHealthTile('sms', sms.status === 'connected' ? 'green' : 'red', sms.status || 'unknown',
+      `Gateway: ${sms.gateway || 'N/A'}<br>Queue: ${sms.queue_depth || 0} · Rate: ${sms.sms_rate_limit_per_min || 0}/min`);
+  }
+
+  // SMS Feed
+  if (logs && logs.length) {
+    document.getElementById('sms-feed').innerHTML = logs.map(l => `
+      <div class="sms-log-item">
+        <div class="sms-icon outbound">📤</div>
+        <div class="sms-body">
+          <div style="font-size:13px;font-weight:600;">To: ${l.recipient_phone} <span class="badge badge-green" style="margin-left:6px;">${l.status}</span></div>
+          <div class="sms-meta">${l.county || '?'} County · ${l.char_count}/160 chars · ${formatTime(l.sent_at)}</div>
+          <div class="sms-text">${escHtml(l.message_text)}</div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    document.getElementById('sms-feed').innerHTML = '<div style="color:var(--text-dim);font-size:13px;">No SMS logs yet.</div>';
+  }
+}
+
+function setHealthTile(key, color, status, detail) {
+  const badge = document.getElementById(`health-${key}-badge`);
+  badge.textContent = status.toUpperCase();
+  badge.className = `badge badge-${color}`;
+  document.getElementById(`health-${key}-detail`).innerHTML = detail;
+}
+
+// ===========================
+// MODULE 2: TRIAGE
+// ===========================
+async function loadTriage() {
+  const cases = await api('cases?status=PENDING_ESCALATION');
+  const container = document.getElementById('triage-list');
+
+  if (!cases || cases.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:60px 20px;">
+        <div style="font-size:48px; margin-bottom:12px;">✅</div>
+        <div style="font-size:16px; font-weight:700; color:var(--growth-green);">Triage Queue Clear</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:6px;">All escalated scans have been verified by CARI extension officers.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = cases.map(c => {
+    const confPct = (c.ai_confidence * 100).toFixed(0);
+    const confClass = c.ai_confidence >= 0.65 ? 'high' : c.ai_confidence >= 0.4 ? 'med' : 'low';
+    return `
+    <div class="case-card">
+      <div class="case-header">
+        <div>
+          <span style="font-size:15px; font-weight:700;">${escHtml(c.case_number)}</span>
+          <span class="badge badge-red" style="margin-left:8px;">${escHtml(c.status)}</span>
+          ${c.is_blurry ? '<span class="badge badge-gold" style="margin-left:4px;">📷 BLURRY</span>' : ''}
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openResolveModal('${c.id}','${escHtml(c.case_number)}')">✅ Resolve & Dispatch SMS</button>
+      </div>
+      <div class="case-meta">
+        <div class="case-meta-item"><span class="case-meta-label">Farmer</span><span class="case-meta-value">${escHtml(c.farmer_name)} · ${escHtml(c.farmer_phone)}</span></div>
+        <div class="case-meta-item"><span class="case-meta-label">Crop Type</span><span class="case-meta-value">${escHtml(c.crop_type)}</span></div>
+        <div class="case-meta-item"><span class="case-meta-label">AI Diagnosis</span><span class="case-meta-value">${escHtml(c.ai_diagnosis)}</span></div>
+        <div class="case-meta-item">
+          <span class="case-meta-label">Confidence</span>
+          <span class="case-meta-value">
+            <div class="conf-bar">
+              <span>${confPct}%</span>
+              <div class="conf-track"><div class="conf-fill ${confClass}" style="width:${confPct}%"></div></div>
+              <span class="badge badge-${confClass === 'high' ? 'green' : confClass === 'med' ? 'gold' : 'red'}">${confClass.toUpperCase()}</span>
+            </div>
+          </span>
+        </div>
+        <div class="case-meta-item"><span class="case-meta-label">Severity</span><span class="case-meta-value">${escHtml(c.severity)}</span></div>
+        <div class="case-meta-item"><span class="case-meta-label">Received</span><span class="case-meta-value">${formatTime(c.created_at)}</span></div>
+      </div>
+      ${c.officer_notes ? `<div style="font-size:12px;color:var(--text-dim);padding:8px 10px;background:var(--bg);border-radius:var(--radius-xs);border-left:3px solid var(--harvest-gold);">💡 ${escHtml(c.officer_notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openResolveModal(id, caseNum) {
+  resolvingCaseId = id;
+  document.getElementById('resolve-case-num').textContent = caseNum;
+  document.getElementById('resolve-preset').value = '';
+  document.getElementById('resolve-notes').value = '';
+  document.getElementById('resolve-sms').value = '';
+  updateSmsCount('resolve-sms', 'resolve-sms-count');
+  showModal('resolve-modal');
+}
+
+function applyResolvePreset() {
+  const v = document.getElementById('resolve-preset').value;
+  const presets = {
+    cmd: { notes: 'Verified by CARI Officer: Early chlorotic mosaic confirmed on cassava foliage.', sms: 'CARI Suakoko Alert: CMD detected. Uproot & burn diseased plant immediately. Use certified cuttings. Spray neem for whiteflies. Call 4410.' },
+    cbsd: { notes: 'Verified by CARI Officer: Brown streak necrosis in root cross-section.', sms: 'CARI Alert: CBSD suspected. Do NOT use cuttings from this field. Harvest mature tubers now to avoid rot. Report to county office.' },
+    anth: { notes: 'Verified by CARI Officer: Sunken anthracnose lesions confirmed on pepper fruit.', sms: 'CARI Advisory: Pepper Anthracnose. Remove rotting pods. Spray Mancozeb (2 tbsp/15L water). Water at soil base only.' },
+    wilt: { notes: 'Verified by CARI Officer: Rapid wilting with green leaves, vascular browning.', sms: 'CARI Alert: Pepper Bacterial Wilt. Infected plants cannot recover. Remove root ball with soil. Avoid moving wet soil.' },
+    blurry: { notes: 'Image quality insufficient for reliable diagnosis. Requesting rescan.', sms: 'CARI Notice: Leaf photo was blurry. Please rescan your crop in direct sunlight. Focus camera on top leaves. Dial *123#.' },
+    custom: { notes: '', sms: '' },
+  };
+  if (presets[v]) {
+    document.getElementById('resolve-notes').value = presets[v].notes;
+    document.getElementById('resolve-sms').value = presets[v].sms;
+    updateSmsCount('resolve-sms', 'resolve-sms-count');
+  }
+}
+
+async function submitResolve() {
+  const notes = document.getElementById('resolve-notes').value;
+  const sms = document.getElementById('resolve-sms').value;
+  if (!sms) return toast('SMS message required', true);
+  if (sms.length > 160) return toast('SMS exceeds 160 characters!', true);
+
+  const res = await api(`cases/${resolvingCaseId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ officer_notes: notes, officer_resolution: sms, send_sms_to_farmer: true }),
+  });
+
+  if (res) {
+    closeModal('resolve-modal');
+    toast('✓ Case resolved & SMS dispatched to farmer!');
+    loadTriage();
+    loadMission(); // refresh KPIs
+  } else {
+    toast('Failed to resolve case', true);
+  }
+}
+
+// ===========================
+// MODULE 3: FARMERS
+// ===========================
+let farmerSearchTimer;
+function debounceFarmerSearch() {
+  clearTimeout(farmerSearchTimer);
+  farmerSearchTimer = setTimeout(loadFarmers, 300);
+}
+
+async function loadFarmers() {
+  const county = document.getElementById('farmer-county-filter').value;
+  const search = document.getElementById('farmer-search').value;
+  let url = 'farmers?limit=100';
+  if (county) url += `&county=${encodeURIComponent(county)}`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+
+  const farmers = await api(url);
+  const tbody = document.getElementById('farmer-tbody');
+
+  if (!farmers || farmers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:30px;">No farmers found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = farmers.map(f => `
+    <tr>
+      <td style="font-weight:600;">${escHtml(f.full_name)}</td>
+      <td><span class="badge badge-green">${escHtml(f.county)}</span></td>
+      <td>${escHtml(f.district || '—')}</td>
+      <td>${f.gender === 'female' ? '♀' : '♂'} ${escHtml(f.gender)}</td>
+      <td style="font-family:monospace;font-size:12px;">${escHtml(f.phone_number)}</td>
+      <td>${escHtml(f.preferred_language || f.language_preference || '—')}</td>
+      <td><span class="badge ${f.consent_status === 'ACTIVE' ? 'badge-green' : 'badge-red'}">${escHtml(f.consent_status || 'ACTIVE')}</span></td>
+      <td>${f.livestock_interest ? '<span class="badge badge-gold">YES</span>' : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function showBroadcastModal() {
+  document.getElementById('broadcast-msg').value = '';
+  document.getElementById('broadcast-template').value = '';
+  updateSmsCount('broadcast-msg', 'broadcast-count');
+  showModal('broadcast-modal');
+}
+
+function applyBroadcastTemplate() {
+  const v = document.getElementById('broadcast-template').value;
+  const templates = {
+    rain: 'CARI Agro-Met Alert: Heavy rains expected next 48h. Clear drainage ditches along cassava ridges to prevent root rot. Dial *123# for help.',
+    pest: 'CARI Pest Alert: Whitefly infestation reported in Suakoko. Inspect cassava leaf undersides. Apply neem extract spray immediately.',
+  };
+  if (templates[v]) {
+    document.getElementById('broadcast-msg').value = templates[v];
+    updateSmsCount('broadcast-msg', 'broadcast-count');
+  }
+}
+
+async function submitBroadcast() {
+  const county = document.getElementById('broadcast-county').value;
+  const msg = document.getElementById('broadcast-msg').value;
+  if (!msg) return toast('Message required', true);
+  if (msg.length > 160) return toast('Message exceeds 160 characters!', true);
+
+  const res = await api('sms/broadcast', {
+    method: 'POST',
+    body: JSON.stringify({ county, message_text: msg }),
+  });
+
+  if (res) {
+    closeModal('broadcast-modal');
+    toast(`✓ Broadcast ${res.broadcast_id} sent to ${res.messages_dispatched} farmer(s)!`);
+  } else {
+    toast('Broadcast failed', true);
+  }
+}
+
+// ===========================
+// MODULE 4: USSD & SMS
+// ===========================
+function resetUssd() {
+  ussdSessionId = 'USSD-' + Math.random().toString(36).substr(2, 8);
+  ussdText = '';
+  ussdActive = false;
+  document.getElementById('ussd-screen').textContent = 'Dial *123# to begin session...';
+  document.getElementById('ussd-input').value = '';
+  sendUssd(); // auto-dial
+}
+
+async function sendUssd() {
+  const input = document.getElementById('ussd-input').value.trim();
+
+  if (!ussdActive) {
+    ussdText = '';
+    ussdActive = true;
+  } else if (input) {
+    ussdText = ussdText ? ussdText + '*' + input : input;
+  }
+
+  document.getElementById('ussd-input').value = '';
+  document.getElementById('ussd-screen').textContent = 'Connecting...';
+
+  const res = await api('ussd', {
+    method: 'POST',
+    body: JSON.stringify({
+      sessionId: ussdSessionId,
+      phoneNumber: '+231770123456',
+      serviceCode: '*123#',
+      text: ussdText,
+    }),
+  });
+
+  if (res) {
+    const display = res.message.replace(/^(CON|END)\s*/, '');
+    document.getElementById('ussd-screen').textContent = display;
+    if (!res.continueSession) {
+      ussdActive = false;
+      document.getElementById('ussd-screen').textContent += '\n\n[Session Ended]';
+    }
+  } else {
+    document.getElementById('ussd-screen').textContent = '⚠ Connection to USSD gateway failed.';
+    ussdActive = false;
+  }
+}
+
+async function loadSmsInspector() {
+  const logs = await api('sms/logs?limit=20');
+  const container = document.getElementById('sms-inspector');
+
+  if (!logs || logs.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px;">No outbound packets logged.</div>';
+    return;
+  }
+
+  container.innerHTML = logs.map(l => `
+    <div class="sms-log-item">
+      <div class="sms-icon outbound">📤</div>
+      <div class="sms-body">
+        <div style="font-size:12px;font-weight:600;">
+          <span style="font-family:monospace;">${escHtml(l.recipient_phone)}</span>
+          <span class="badge badge-green" style="margin-left:6px;">${l.status}</span>
+          <span style="color:var(--text-dim);margin-left:8px;">${l.char_count}/160</span>
+        </div>
+        <div class="sms-meta">${l.county} County · ${formatTime(l.sent_at)}</div>
+        <div class="sms-text">${escHtml(l.message_text)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===========================
+// MODULE 5: KNOWLEDGE BASE
+// ===========================
+async function loadKnowledge(crop) {
+  const url = crop && crop !== 'ALL' ? `knowledge?crop=${crop}` : 'knowledge';
+  const docs = await api(url);
+  const container = document.getElementById('knowledge-list');
+
+  if (!docs || docs.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);">No knowledge items found.</div>';
+    return;
+  }
+
+  container.innerHTML = docs.map(d => `
+    <div class="knowledge-card">
+      <div class="knowledge-header">
+        <div class="knowledge-title">${escHtml(d.condition_name)}</div>
+        <div>
+          <span class="badge badge-blue">${escHtml(d.doc_id)}</span>
+          <span class="badge badge-green" style="margin-left:4px;">${escHtml(d.crop)}</span>
+        </div>
+      </div>
+      <dl class="knowledge-detail">
+        <dt>Approved By</dt><dd>${escHtml(d.approved_by)} · ${escHtml(d.source_org)}</dd>
+        <dt>Symptoms</dt><dd>${escHtml(d.symptom_description)}</dd>
+        <dt>Cultural</dt><dd style="color:var(--growth-green);">${escHtml(d.cultural_control)}</dd>
+        <dt>Chemical</dt><dd style="color:var(--harvest-gold);">${escHtml(d.chemical_control)}</dd>
+        <dt>Vetted SMS</dt><dd style="border-left:3px solid var(--growth-green);padding-left:10px;">
+          "${escHtml(d.vetted_sms_template)}"
+          <br><span style="font-size:10px;color:var(--text-dim);">${d.vetted_sms_template.length}/160 characters</span>
+        </dd>
+      </dl>
+    </div>
+  `).join('');
+}
+
+// ===========================
+// MODULE 6: AI SAFETY VALIDATOR
+// ===========================
+async function runDiagnostic(crop) {
+  const area = document.getElementById('diag-result-area');
+  area.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);">Running vision engine on ' + escHtml(crop) + '...</div>';
+
+  const res = await api('diagnose', {
+    method: 'POST',
+    body: JSON.stringify({ crop_type: crop, image_url: 'mock_leaf_scan' }),
+  });
+
+  if (!res) {
+    area.innerHTML = '<div class="diag-result unsupported"><div class="diag-icon">❌</div><div style="font-weight:700;">API Connection Failed</div></div>';
+    return;
+  }
+
+  if (!res.is_supported) {
+    area.innerHTML = `
+      <div class="diag-result unsupported">
+        <div class="diag-icon">🛡️</div>
+        <div style="font-size:18px; font-weight:800; color:var(--danger); margin-bottom:8px;">RULE SCAN-03 TRIGGERED</div>
+        <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Crop '${escHtml(crop)}' is NOT in the validated set</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">${escHtml(res.message)}</div>
+        <div class="badge badge-red" style="font-size:12px; padding:6px 14px;">UNSUPPORTED_CROP — Explicit abstention instead of hallucinating</div>
+        <div style="margin-top:16px; padding:12px; background:var(--bg); border-radius:var(--radius-xs); text-align:left; font-size:12px; color:var(--text-muted); line-height:1.6;">
+          <strong style="color:var(--harvest-gold);">Safety Action:</strong> Model refused to guess. Farmer directed to County Extension Officer for manual assessment.
+          <br><strong style="color:var(--harvest-gold);">Supported Crops:</strong> Cassava, Pepper only.
+        </div>
+      </div>`;
+  } else {
+    const confPct = (res.confidence_score * 100).toFixed(0);
+    const confClass = res.confidence_score >= 0.65 ? 'high' : res.confidence_score >= 0.4 ? 'med' : 'low';
+    area.innerHTML = `
+      <div class="diag-result supported">
+        <div class="diag-icon">✅</div>
+        <div style="font-size:18px; font-weight:800; color:var(--growth-green); margin-bottom:8px;">DIAGNOSTIC COMPLETE</div>
+        <div style="font-size:14px; font-weight:600; margin-bottom:16px;">${escHtml(res.diagnosis)}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left; max-width:400px; margin:0 auto;">
+          <div class="kpi green" style="padding:12px;"><div class="kpi-value" style="font-size:20px;">${confPct}%</div><div class="kpi-label">Confidence</div><div class="kpi-sub">${res.confidence_band}</div></div>
+          <div class="kpi gold" style="padding:12px;"><div class="kpi-value" style="font-size:20px;">${escHtml(res.severity)}</div><div class="kpi-label">Severity</div><div class="kpi-sub">${escHtml(res.knowledge_doc_id || 'N/A')}</div></div>
+        </div>
+        <div style="margin-top:16px; padding:12px; background:var(--bg); border-radius:var(--radius-xs); text-align:left; font-size:12px; color:var(--text-muted); line-height:1.6;">
+          <strong>Case:</strong> ${escHtml(res.case_number || 'N/A')} · <strong>Crop:</strong> ${escHtml(res.crop_type)}
+          <br><strong>Engine:</strong> ${escHtml(res.message)}
+        </div>
+      </div>`;
+  }
+}
+
+// ===========================
+// MODALS
+// ===========================
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function showApiConfigModal() {
+  document.getElementById('api-url-input').value = API_BASE;
+  showModal('api-modal');
+}
+function saveApiUrl() {
+  API_BASE = document.getElementById('api-url-input').value.replace(/\/+$/, '');
+  localStorage.setItem('plant_api_url', API_BASE);
+  document.getElementById('api-url-display').textContent = API_BASE.replace(/^https?:\/\//, '');
+  closeModal('api-modal');
+  toast('API target updated');
+  loadMission();
+}
+
+// ===========================
+// UTILS
+// ===========================
+function updateSmsCount(inputId, countId) {
+  const len = document.getElementById(inputId).value.length;
+  const el = document.getElementById(countId);
+  el.textContent = `${len}/160`;
+  el.className = 'char-count' + (len > 160 ? ' over' : '');
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTime(ts) {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' · ' +
+           d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch { return ts; }
+}
+
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+// ===========================
+// INIT
+// ===========================
+document.getElementById('api-url-display').textContent = API_BASE.replace(/^https?:\/\//, '');
+loadMission();
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', (e) => { if (e.target === el) el.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

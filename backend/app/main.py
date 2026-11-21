@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.initial_data import seed_database
@@ -59,6 +60,17 @@ app.include_router(ussd.router, prefix=settings.API_V1_STR, tags=["USSD Engine (
 app.include_router(diagnostics.router, prefix=settings.API_V1_STR, tags=["Diagnostics & Safety"])
 app.include_router(weather.router, prefix=settings.API_V1_STR, tags=["Agro-Met Weather"])
 
+ADMIN_HTML_STATIC = os.path.join(os.path.dirname(__file__), "static", "desktop_admin.html")
+ADMIN_HTML_DEV = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apps", "desktop", "desktop_admin.html"))
+
+@app.get("/admin", response_class=HTMLResponse)
+@app.get("/desktop", response_class=HTMLResponse)
+def get_desktop_admin():
+    for path in [ADMIN_HTML_STATIC, ADMIN_HTML_DEV]:
+        if os.path.exists(path):
+            return FileResponse(path)
+    return HTMLResponse("<h1>Desktop Admin UI not found</h1>", status_code=404)
+
 @app.get("/")
 def root():
     return {
@@ -66,7 +78,9 @@ def root():
         "version": settings.VERSION,
         "status": "online",
         "docs": f"{settings.API_V1_STR}/docs",
-        "health": f"{settings.API_V1_STR}/health"
+        "health": f"{settings.API_V1_STR}/health",
+        "admin": "/admin",
+        "desktop": "/desktop"
     }
 
 if __name__ == "__main__":
