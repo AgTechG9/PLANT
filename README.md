@@ -73,6 +73,23 @@ dotnet run
 - Farmers API: `http://localhost:5124/api/v1/farmers`
 - Cases API: `http://localhost:5124/api/v1/cases`
 
+### 4. Desktop Admin Workstation (.NET 10) (`apps/desktop/`)
+```bash
+# 1-Click Launch (auto-detects pre-built binary or runs via dotnet)
+./run_desktop_admin.sh
+
+# Or run via dotnet CLI
+dotnet run --project apps/desktop/Plant.DesktopAdmin.csproj
+```
+- **6 Integrated Workstation Modules:**
+  1. **Mission Control & Health Telemetry:** Live gateway ping, database latency, 54% female quota tracker, and Rule REG-03 livestock interest counter.
+  2. **Master Escalation Workbench:** Rule SCAN-04 triage (<65% AI confidence / blurry scans) with 1-click CARI-vetted advice resolution & 160-char SMS dispatch.
+  3. **Farmer Directory & Emergency Broadcast:** County filtering (Bong, Nimba, Lofa), STOP consent inspection, and county-targeted emergency broadcast.
+  4. **USSD Engine & SMS Testbench:** Interactive virtual `*123#` dialer simulator and outbound SMS packet inspector with GSM character count checks.
+  5. **Vetted CARI Knowledge Base:** Rule ADV-01 audit verifying zero hallucinations (`CARI-CAS-001`, `CARI-PEP-001`).
+  6. **AI Diagnostics & Safety Validator:** Rule SCAN-03 guardrail demonstration (explicit warning returned for unsupported crops like Maize).
+- **Standalone Binaries:** Available in `apps/desktop/dist/` for macOS (`osx-arm64`), Windows (`win-x64`), and Linux (`linux-x64`).
+
 ---
 
 ## Hackathon Rules & Safety Guardrails

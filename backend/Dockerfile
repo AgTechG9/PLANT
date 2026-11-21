@@ -11,17 +11,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
+# Install lightweight CPU-only PyTorch and torchvision
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
+
+# Install python dependencies from backend/requirements.txt
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
+# Copy only backend application code
 COPY backend/ .
 
-ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
 # Use dynamic PORT provided by Railway / cloud host
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}

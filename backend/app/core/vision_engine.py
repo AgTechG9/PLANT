@@ -2,13 +2,32 @@ import os
 import base64
 import io
 import urllib.request
-import numpy as np
-import cv2
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
-from PIL import Image
 from typing import Dict, Any, Tuple, Optional
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import models, transforms
+except ImportError:
+    torch = None
+    nn = None
+    models = None
+    transforms = None
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models", "crop_classifier.pt")
 
@@ -22,11 +41,13 @@ class PlantVisionEngine:
     4. Dynamically calculated confidence score & severity based on real image pixels.
     """
 
-    _neural_model: Optional[nn.Module] = None
+    _neural_model: Optional[Any] = None
     _model_classes: Optional[list] = None
 
     @classmethod
-    def get_neural_model(cls) -> Tuple[Optional[nn.Module], Optional[list]]:
+    def get_neural_model(cls) -> Tuple[Optional[Any], Optional[list]]:
+        if torch is None or models is None:
+            return None, None
         if cls._neural_model is None and os.path.exists(MODEL_PATH):
             try:
                 checkpoint = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
@@ -51,8 +72,10 @@ class PlantVisionEngine:
         return cls._neural_model, cls._model_classes
 
     @staticmethod
-    def decode_image(image_data: str) -> Optional[np.ndarray]:
+    def decode_image(image_data: str) -> Optional[Any]:
         """Decode Base64 string, URL, or local path into OpenCV BGR numpy array."""
+        if np is None or cv2 is None or Image is None:
+            return None
         try:
             if not image_data or not isinstance(image_data, str):
                 return None
