@@ -71,6 +71,10 @@ def get_desktop_admin():
             return FileResponse(path)
     return HTMLResponse("<h1>Desktop Admin UI not found</h1>", status_code=404)
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "app": settings.PROJECT_NAME}
+
 @app.get("/")
 def root():
     return {
