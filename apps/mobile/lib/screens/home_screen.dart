@@ -4,6 +4,7 @@ import '../models/user_session.dart';
 import '../models/diagnostic_result.dart';
 import '../services/api_service.dart';
 import '../services/offline_storage_service.dart';
+import 'login_screen.dart';
 import 'scan_screen.dart';
 import 'ussd_simulator_screen.dart';
 import 'offline_queue_screen.dart';
@@ -73,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : 'PLANT Farmer Assistant'),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 4),
             child: Chip(
               backgroundColor: Colors.white24,
               side: BorderSide.none,
@@ -92,6 +93,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white, size: 20),
+            tooltip: 'Switch User / Log Out',
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: IndexedStack(
