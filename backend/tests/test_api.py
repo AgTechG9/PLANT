@@ -4,6 +4,33 @@ from app.main import app
 
 client = TestClient(app)
 
+def test_user_authentication_three_roles():
+    # 1. Admin login
+    res_admin = client.post("/api/v1/auth/login", json={"username": "admin", "password": "admin123"})
+    assert res_admin.status_code == 200
+    data_admin = res_admin.json()
+    assert data_admin["user"]["role"] == "ADMIN"
+    token = data_admin["access_token"]
+
+    # Verify /auth/me with Bearer token
+    res_me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert res_me.status_code == 200
+    assert res_me.json()["username"] == "admin"
+
+    # 2. Agent login
+    res_agent = client.post("/api/v1/auth/login", json={"username": "agent_suakoko", "password": "agent123"})
+    assert res_agent.status_code == 200
+    assert res_agent.json()["user"]["role"] == "AGENT"
+
+    # 3. Farmer login
+    res_farmer = client.post("/api/v1/auth/login", json={"username": "farmer_korto", "password": "farmer123"})
+    assert res_farmer.status_code == 200
+    assert res_farmer.json()["user"]["role"] == "FARMER"
+
+    # 4. Invalid login rejected
+    res_bad = client.post("/api/v1/auth/login", json={"username": "admin", "password": "wrongpassword"})
+    assert res_bad.status_code == 401
+
 def test_health_telemetry():
     response = client.get("/api/v1/health")
     assert response.status_code == 200

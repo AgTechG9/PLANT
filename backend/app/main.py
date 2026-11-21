@@ -1,14 +1,16 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.initial_data import seed_database
-from app.api.v1 import health, farmers, cases, knowledge, sms, ussd, diagnostics
+from app.api.v1 import auth, upload, health, farmers, cases, knowledge, sms, ussd, diagnostics
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
-# Seed database with initial Liberian agricultural data
+# Seed database with initial Liberian agricultural data and users
 db = SessionLocal()
 try:
     seed_database(db)
@@ -24,6 +26,11 @@ app = FastAPI(
     redoc_url=f"{settings.API_V1_STR}/redoc",
 )
 
+# Static files for uploaded crop images
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +41,8 @@ app.add_middleware(
 )
 
 # Mount API Routers
+app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Authentication (Admin, Agent, Farmer)"])
+app.include_router(upload.router, prefix=settings.API_V1_STR, tags=["File & Image Upload"])
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["Health & Telemetry"])
 app.include_router(farmers.router, prefix=settings.API_V1_STR, tags=["Farmers"])
 app.include_router(cases.router, prefix=settings.API_V1_STR, tags=["Cases & Triage"])

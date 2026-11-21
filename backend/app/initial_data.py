@@ -1,9 +1,48 @@
 import datetime
 from sqlalchemy.orm import Session
-from app.models.models import Farmer, ScanCase, KnowledgeItem, SmsLog
+from app.models.models import User, Farmer, ScanCase, KnowledgeItem, SmsLog
+from app.core.security import generate_salt, hash_password
 
 def seed_database(db: Session):
-    # Check if already seeded
+    # Seed default User accounts for the 3 major sections (ADMIN, AGENT, FARMER)
+    if db.query(User).count() == 0:
+        print("Seeding initial User accounts (ADMIN, AGENT, FARMER)...")
+        users = [
+            # 1. Admin Section (Gorpu & John)
+            User(
+                username="admin",
+                password_hash=hash_password("admin123", "admin_salt"),
+                salt="admin_salt",
+                role="ADMIN",
+                full_name="Platform Administrator (Gorpu & John)",
+                phone_number="+231770000001",
+                county="Montserrado"
+            ),
+            # 2. Agent Section (County Extension Officer / Facilitator)
+            User(
+                username="agent_suakoko",
+                password_hash=hash_password("agent123", "agent_salt"),
+                salt="agent_salt",
+                role="AGENT",
+                full_name="Extension Officer James Flomo",
+                phone_number="+231886111222",
+                county="Bong"
+            ),
+            # 3. Farmer Section
+            User(
+                username="farmer_korto",
+                password_hash=hash_password("farmer123", "farmer_salt"),
+                salt="farmer_salt",
+                role="FARMER",
+                full_name="Korto Flomo",
+                phone_number="+231770123456",
+                county="Bong"
+            )
+        ]
+        db.add_all(users)
+        db.commit()
+
+    # Check if farmers already seeded
     if db.query(Farmer).count() > 0:
         return
 

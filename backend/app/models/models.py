@@ -7,6 +7,20 @@ from app.core.database import Base
 def generate_uuid():
     return str(uuid.uuid4())
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    salt = Column(String, nullable=False)
+    role = Column(String, nullable=False) # 'ADMIN', 'AGENT', 'FARMER'
+    full_name = Column(String, nullable=False)
+    phone_number = Column(String, nullable=True)
+    county = Column(String, nullable=True) # e.g. Bong, Nimba, Lofa
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class Farmer(Base):
     __tablename__ = "farmers"
 
