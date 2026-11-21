@@ -7,15 +7,22 @@ from app.core.database import engine, Base, SessionLocal
 from app.initial_data import seed_database
 from app.api.v1 import auth, upload, health, farmers, cases, knowledge, sms, ussd, diagnostics, weather
 
-# Create DB tables
-Base.metadata.create_all(bind=engine)
+# Create DB tables — wrapped so a transient DB connection failure doesn't kill startup
+try:
+    Base.metadata.create_all(bind=engine)
+    print("[Startup] DB tables ensured.")
+except Exception as e:
+    print(f"[Startup] WARNING: Could not create DB tables: {e}")
 
 # Seed database with initial Liberian agricultural data and users
-db = SessionLocal()
 try:
-    seed_database(db)
-finally:
-    db.close()
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
+except Exception as e:
+    print(f"[Startup] WARNING: Could not seed database: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
