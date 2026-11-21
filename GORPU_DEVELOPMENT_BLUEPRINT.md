@@ -72,10 +72,14 @@
 # 1. Update local repo
 git pull origin main
 
-# 2. Inspect reference backend
-cd backend && source .venv/bin/activate && pytest -v
+# 2. Run your .NET 10 Web API (Pre-scaffolded & ready!)
+cd backend-dotnet
+dotnet run
+# Endpoints live: http://localhost:5124/health, /api/v1/farmers, /api/v1/cases
 
-# 3. Scaffold your .NET 10 project
-cd ..
-dotnet new webapi -n Plant.AdminApi -o backend-dotnet
+# 3. Reference Python AI backend
+cd ../backend && source .venv/bin/activate && pytest -v
+
+# 4. Flutter Web / Mobile App
+cd ../apps/mobile && flutter run -d chrome
 ```
