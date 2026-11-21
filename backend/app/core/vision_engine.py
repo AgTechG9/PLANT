@@ -1,20 +1,54 @@
+import os
 import base64
 import io
 import urllib.request
 import numpy as np
 import cv2
+import torch
+import torch.nn as nn
+from torchvision import models, transforms
 from PIL import Image
 from typing import Dict, Any, Tuple, Optional
 
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models", "crop_classifier.pt")
+
 class PlantVisionEngine:
     """
-    Real Computer Vision & Pathology Diagnostics Engine for PLANT AI.
+    Hybrid Computer Vision & Deep Learning Diagnostics Engine for PLANT AI.
     Runs locally on the machine:
     1. Laplacian variance blur detection (Rule SCAN-04)
-    2. Automatic crop type identification (Cassava vs Pepper vs Maize vs Other)
-    3. Foliar pathology segmentation (Anthracnose, CMD, CBSD, Healthy)
+    2. Deep Learning inference via fine-tuned MobileNetV3 (Cassava & Pepper)
+    3. Computer Vision leaf morphology & HSV segmentation fallback
     4. Dynamically calculated confidence score & severity based on real image pixels.
     """
+
+    _neural_model: Optional[nn.Module] = None
+    _model_classes: Optional[list] = None
+
+    @classmethod
+    def get_neural_model(cls) -> Tuple[Optional[nn.Module], Optional[list]]:
+        if cls._neural_model is None and os.path.exists(MODEL_PATH):
+            try:
+                checkpoint = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
+                num_classes = checkpoint.get("num_classes", 6)
+                classes = checkpoint.get("classes", [])
+
+                model = models.mobilenet_v3_small(weights=None)
+                in_features = model.classifier[0].in_features
+                model.classifier = nn.Sequential(
+                    nn.Linear(in_features, 256),
+                    nn.Hardswish(),
+                    nn.Dropout(p=0.2),
+                    nn.Linear(256, num_classes)
+                )
+                model.load_state_dict(checkpoint["state_dict"])
+                model.eval()
+                cls._neural_model = model
+                cls._model_classes = classes
+                print(f"[VisionEngine] Successfully loaded PyTorch MobileNetV3 model ({num_classes} classes).")
+            except Exception as e:
+                print(f"[VisionEngine] Notice: Model load failed ({e}), using morphology fallback.")
+        return cls._neural_model, cls._model_classes
 
     @staticmethod
     def decode_image(image_data: str) -> Optional[np.ndarray]:
@@ -153,50 +187,108 @@ class PlantVisionEngine:
             else:
                 detected_crop = "Pepper"
 
-        # 4. Pathology Classification
+        # 4. Pathology Classification via PyTorch Deep Learning Model or Morphology Fallback
         diagnosis = "Healthy"
         severity = "None"
         doc_id = None
         base_confidence = 0.88
+        ai_engine_type = "Pixel Morphology & HSV Segmentation"
 
-        if detected_crop == "Pepper":
-            if brown_ratio > 0.05 or (brown_ratio > 0.02 and yellow_ratio > 0.10):
-                diagnosis = "Pepper Anthracnose"
-                doc_id = "CARI-PEP-001"
-                severity = "Severe" if brown_ratio > 0.18 else "Moderate"
-                base_confidence = min(0.96, 0.78 + (brown_ratio * 1.5))
-            elif yellow_ratio > 0.15:
-                diagnosis = "Pepper Veinal Mottle Virus (PVMV)"
-                doc_id = "CARI-PEP-002"
-                severity = "Moderate"
-                base_confidence = min(0.93, 0.75 + (yellow_ratio * 1.2))
+        # Attempt Deep Learning Inference via MobileNetV3
+        nn_model, nn_classes = cls.get_neural_model()
+        nn_predicted = None
+        nn_conf = 0.0
+        if nn_model is not None and nn_classes and not is_blurry:
+            try:
+                rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(rgb)
+                preprocess = transforms.Compose([
+                    transforms.Resize((224, 224)),
+                    transforms.ToTensor(),
+                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                ])
+                tensor = preprocess(pil_img).unsqueeze(0)
+                with torch.no_grad():
+                    logits = nn_model(tensor)
+                    probs = torch.softmax(logits, dim=1)[0]
+                    top_idx = torch.argmax(probs).item()
+                    nn_predicted = nn_classes[top_idx]
+                    nn_conf = float(probs[top_idx].item())
+                    ai_engine_type = f"MobileNetV3 Neural Network ({nn_conf*100:.1f}% prob)"
+            except Exception as e:
+                print(f"[VisionEngine] Deep learning inference error: {e}")
+
+        # Map predictions if neural model succeeded
+        if nn_predicted and (user_selected_crop in [None, "AUTO", ""] or user_selected_crop.lower() in nn_predicted):
+            if "cassava" in nn_predicted:
+                detected_crop = "Cassava"
+                if "cmd" in nn_predicted:
+                    diagnosis = "Cassava Mosaic Disease (CMD)"
+                    doc_id = "CARI-CAS-001"
+                    severity = "Moderate"
+                elif "cbsd" in nn_predicted:
+                    diagnosis = "Cassava Brown Streak Disease (CBSD)"
+                    doc_id = "CARI-CAS-002"
+                    severity = "Severe"
+                else:
+                    diagnosis = "Healthy Cassava Leaf"
+                    doc_id = "CARI-CAS-000"
+                    severity = "None"
             else:
-                diagnosis = "Healthy Pepper Foliage"
-                doc_id = "CARI-PEP-000"
-                severity = "None"
-                base_confidence = 0.94
+                detected_crop = "Pepper"
+                if "anthracnose" in nn_predicted:
+                    diagnosis = "Pepper Anthracnose"
+                    doc_id = "CARI-PEP-001"
+                    severity = "Moderate"
+                elif "bacterial_spot" in nn_predicted:
+                    diagnosis = "Pepper Bacterial Spot"
+                    doc_id = "CARI-PEP-002"
+                    severity = "Moderate"
+                else:
+                    diagnosis = "Healthy Pepper Foliage"
+                    doc_id = "CARI-PEP-000"
+                    severity = "None"
+            base_confidence = min(0.97, max(0.85, nn_conf))
+        else:
+            # Fallback to Color & Morphology heuristics
+            if detected_crop == "Pepper":
+                if brown_ratio > 0.05 or (brown_ratio > 0.02 and yellow_ratio > 0.10):
+                    diagnosis = "Pepper Anthracnose"
+                    doc_id = "CARI-PEP-001"
+                    severity = "Severe" if brown_ratio > 0.18 else "Moderate"
+                    base_confidence = min(0.96, 0.78 + (brown_ratio * 1.5))
+                elif yellow_ratio > 0.15:
+                    diagnosis = "Pepper Veinal Mottle Virus (PVMV)"
+                    doc_id = "CARI-PEP-002"
+                    severity = "Moderate"
+                    base_confidence = min(0.93, 0.75 + (yellow_ratio * 1.2))
+                else:
+                    diagnosis = "Healthy Pepper Foliage"
+                    doc_id = "CARI-PEP-000"
+                    severity = "None"
+                    base_confidence = 0.94
 
-        elif detected_crop == "Cassava":
-            if yellow_ratio > 0.18 and brown_ratio < 0.08:
-                diagnosis = "Cassava Mosaic Disease (CMD)"
-                doc_id = "CARI-CAS-001"
-                severity = "Moderate" if yellow_ratio < 0.35 else "Severe"
-                base_confidence = min(0.95, 0.80 + (yellow_ratio * 1.1))
-            elif brown_ratio > 0.06:
-                diagnosis = "Cassava Brown Streak Disease (CBSD)"
-                doc_id = "CARI-CAS-002"
-                severity = "Severe"
-                base_confidence = min(0.94, 0.76 + (brown_ratio * 1.6))
-            else:
-                diagnosis = "Healthy Cassava Leaf"
-                doc_id = "CARI-CAS-000"
-                severity = "None"
-                base_confidence = 0.93
+            elif detected_crop == "Cassava":
+                if yellow_ratio > 0.18 and brown_ratio < 0.08:
+                    diagnosis = "Cassava Mosaic Disease (CMD)"
+                    doc_id = "CARI-CAS-001"
+                    severity = "Moderate" if yellow_ratio < 0.35 else "Severe"
+                    base_confidence = min(0.95, 0.80 + (yellow_ratio * 1.1))
+                elif brown_ratio > 0.06:
+                    diagnosis = "Cassava Brown Streak Disease (CBSD)"
+                    doc_id = "CARI-CAS-002"
+                    severity = "Severe"
+                    base_confidence = min(0.94, 0.76 + (brown_ratio * 1.6))
+                else:
+                    diagnosis = "Healthy Cassava Leaf"
+                    doc_id = "CARI-CAS-000"
+                    severity = "None"
+                    base_confidence = 0.93
 
-        elif detected_crop == "Maize":
-            diagnosis = "Unsupported Crop Type"
-            base_confidence = 0.0
-            severity = "N/A"
+            elif detected_crop == "Maize":
+                diagnosis = "Unsupported Crop Type"
+                base_confidence = 0.0
+                severity = "N/A"
 
         # Apply blur penalty to confidence
         if is_blurry:
@@ -214,7 +306,9 @@ class PlantVisionEngine:
             "diagnosis": diagnosis,
             "severity": severity,
             "doc_id": doc_id,
+            "engine_type": ai_engine_type,
             "metrics": {
+                "engine_model": ai_engine_type,
                 "foliage_coverage": round(foliage_ratio * 100, 1),
                 "necrotic_tissue_pct": round(brown_ratio * 100, 1),
                 "chlorosis_yellow_pct": round(yellow_ratio * 100, 1),

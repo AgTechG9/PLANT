@@ -27,9 +27,17 @@ async def upload_image(file: UploadFile = File(...)):
         f.write(contents)
 
     file_url = f"/uploads/{unique_filename}"
+    
+    # Attempt upload to Supabase 'crop-scans' bucket if cloud storage is configured
+    from app.core.supabase_storage import upload_leaf_to_supabase
+    mime = "image/png" if ext == ".png" else "image/jpeg"
+    supabase_url = upload_leaf_to_supabase(unique_filename, contents, mime_type=mime)
+
     return {
         "filename": unique_filename,
-        "url": file_url,
+        "url": supabase_url or file_url,
+        "local_url": file_url,
+        "supabase_url": supabase_url,
         "size_bytes": len(contents),
         "status": "UPLOADED"
     }
