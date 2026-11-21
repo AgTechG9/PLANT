@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final ImagePicker _picker = ImagePicker();
   XFile? _selectedImage;
   Uint8List? _webImageBytes;
-  String _selectedCrop = 'Cassava';
+  String _selectedCrop = 'AUTO';
   bool _isAnalyzing = false;
   String? _sampleImageUrl;
 
@@ -30,7 +31,7 @@ class _ScanScreenState extends State<ScanScreen> {
   double _simulatedConfidence = 0.88;
   bool _showDemoControls = false;
 
-  final List<String> _crops = ['Cassava', 'Pepper', 'Maize'];
+  final List<String> _crops = ['AUTO', 'Cassava', 'Pepper', 'Maize'];
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -73,6 +74,18 @@ class _ScanScreenState extends State<ScanScreen> {
   void _runScan() async {
     setState(() => _isAnalyzing = true);
 
+    String? b64Image;
+    if (_webImageBytes != null) {
+      b64Image = base64Encode(_webImageBytes!);
+    } else if (_selectedImage != null) {
+      try {
+        final bytes = await _selectedImage!.readAsBytes();
+        b64Image = base64Encode(bytes);
+      } catch (e) {
+        debugPrint('Error reading image bytes: $e');
+      }
+    }
+
     if (widget.isOfflineMode) {
       await Future.delayed(const Duration(milliseconds: 900));
       final syncItem = SyncItem(
@@ -87,8 +100,10 @@ class _ScanScreenState extends State<ScanScreen> {
 
     final result = await ApiService.diagnoseCrop(
       cropType: _selectedCrop,
+      imageBase64: b64Image,
+      imageUrl: _sampleImageUrl,
       isBlurry: _simulateBlurry,
-      simulatedConfidence: _simulatedConfidence,
+      simulatedConfidence: _showDemoControls ? _simulatedConfidence : null,
       localImagePath: _selectedImage?.path,
     );
 
@@ -377,30 +392,41 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Select Target Crop:',
+                    'Crop Recognition Mode:',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: _crops.map((c) {
                       final isSelected = _selectedCrop == c;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(
-                            c + (c == 'Maize' ? ' (Test Warning)' : ''),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 12,
-                            ),
+                      String chipLabel;
+                      if (c == 'AUTO') {
+                        chipLabel = '✨ Auto-Detect from Leaf';
+                      } else if (c == 'Maize') {
+                        chipLabel = 'Maize (Warning Test)';
+                      } else {
+                        chipLabel = c;
+                      }
+
+                      return ChoiceChip(
+                        avatar: c == 'AUTO'
+                            ? Icon(Icons.auto_awesome, size: 14, color: isSelected ? Colors.white : AppTheme.primaryGreen)
+                            : null,
+                        label: Text(
+                          chipLabel,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
                           ),
-                          selected: isSelected,
-                          selectedColor: AppTheme.primaryGreen,
-                          onSelected: (val) {
-                            if (val) setState(() => _selectedCrop = c);
-                          },
                         ),
+                        selected: isSelected,
+                        selectedColor: AppTheme.primaryGreen,
+                        onSelected: (val) {
+                          if (val) setState(() => _selectedCrop = c);
+                        },
                       );
                     }).toList(),
                   ),

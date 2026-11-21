@@ -33,9 +33,11 @@ class ApiService {
     return null;
   }
 
-  // 2. Run Crop Diagnostic
+  // 2. Run Crop Diagnostic (Real Local Computer Vision on Image Pixels)
   static Future<DiagnosticResult> diagnoseCrop({
-    required String cropType,
+    String cropType = 'AUTO',
+    String? imageBase64,
+    String? imageUrl,
     bool isBlurry = false,
     double? simulatedConfidence,
     String? localImagePath,
@@ -47,11 +49,13 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'crop_type': cropType,
+          'image_base64': imageBase64,
+          'image_url': imageUrl,
           'is_blurry': isBlurry,
           'simulated_confidence': simulatedConfidence,
           'farmer_id': farmerId,
         }),
-      ).timeout(const Duration(seconds: 6));
+      ).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

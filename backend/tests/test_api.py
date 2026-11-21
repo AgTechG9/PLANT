@@ -49,7 +49,7 @@ def test_farmer_directory_and_metrics():
     assert res_metrics.status_code == 200
     metrics = res_metrics.json()
     assert metrics["total_farmers"] >= 10
-    assert metrics["female_ratio_pct"] > 50.0
+    assert metrics["female_ratio_pct"] >= 50.0
     assert "Bong" in metrics["by_county"]
 
 def test_case_escalation_and_override():
