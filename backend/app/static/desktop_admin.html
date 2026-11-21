@@ -267,6 +267,12 @@ body {
   padding: 18px 16px;
   position: relative;
   overflow: hidden;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+.kpi:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-light);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 .kpi::after {
   content: '';
@@ -338,12 +344,13 @@ body {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.3px;
+  border: 1px solid transparent;
 }
-.badge-green { background: rgba(111,191,72,0.15); color: var(--growth-green); }
-.badge-red { background: rgba(224,82,82,0.15); color: var(--danger); }
-.badge-gold { background: rgba(229,185,92,0.15); color: var(--harvest-gold); }
-.badge-blue { background: rgba(75,163,199,0.15); color: var(--info); }
-.badge-muted { background: rgba(143,163,150,0.12); color: var(--text-muted); }
+.badge-green { background: rgba(111,191,72,0.15); color: var(--growth-green); border-color: rgba(111,191,72,0.3); }
+.badge-red { background: rgba(224,82,82,0.15); color: var(--danger); border-color: rgba(224,82,82,0.3); }
+.badge-gold { background: rgba(229,185,92,0.15); color: var(--harvest-gold); border-color: rgba(229,185,92,0.3); }
+.badge-blue { background: rgba(75,163,199,0.15); color: var(--info); border-color: rgba(75,163,199,0.3); }
+.badge-muted { background: rgba(143,163,150,0.12); color: var(--text-muted); border-color: rgba(143,163,150,0.2); }
 
 /* ========== CONFIDENCE BAR ========== */
 .conf-bar {
@@ -744,6 +751,15 @@ body {
       </div>
       <div class="nav-item" data-module="validator" onclick="switchModule('validator')">
         <span class="nav-icon">🛡️</span> AI Safety Validator
+      </div>
+      <div class="nav-label" style="margin-top: 14px;">Farmer Support & Outreach</div>
+      <div class="nav-item" onclick="showComingSoon('Farmer Learning Center', 'Video & audio tutorials to solve farm problems (CMD, Neem spray, planting) are in development.')">
+        <span class="nav-icon">🎓</span> Learning Center
+        <span class="nav-badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 9px; padding: 1px 6px;">SOON</span>
+      </div>
+      <div class="nav-item" onclick="showComingSoon('Farmer\'s Forum / Community', 'Smallholder peer network across Bong, Nimba, and Lofa is in development.')">
+        <span class="nav-icon">💬</span> Farmer's Forum
+        <span class="nav-badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 9px; padding: 1px 6px;">SOON</span>
       </div>
     </nav>
     <div class="sidebar-status">
@@ -1522,6 +1538,10 @@ function toast(msg, isError = false) {
   el.textContent = msg;
   el.className = 'toast show' + (isError ? ' error' : '');
   setTimeout(() => el.className = 'toast', 3000);
+}
+
+function showComingSoon(feature, desc) {
+  toast(`🚧 ${feature}: In development, coming soon! ${desc}`);
 }
 
 // ===========================

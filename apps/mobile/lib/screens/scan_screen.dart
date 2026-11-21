@@ -177,17 +177,19 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildViewfinder() {
+    final bool hasImage = _selectedImage != null || _sampleImageUrl != null;
+
     return Container(
-      height: 330,
+      height: 340,
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -196,61 +198,147 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Preview
-            if (_selectedImage == null && _sampleImageUrl == null)
+            // Preview Image or Placeholder
+            if (!hasImage)
               Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white12, width: 1.5),
+                        ),
+                        child: const Icon(Icons.center_focus_strong_rounded, size: 48, color: Color(0xFF52B788)),
                       ),
-                      child: const Icon(Icons.camera_alt_outlined, size: 48, color: Colors.white70),
-                    ),
-                    const SizedBox(height: 14),
-                    const Text(
-                      'Position crop leaf inside frame',
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'AI detects crop & pathology automatically',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Position Leaf in Center',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.2),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Keep well-lit and steady for highest diagnosis accuracy',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13, height: 1.3),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else if (_sampleImageUrl != null && _selectedImage == null)
-              Image.network(_sampleImageUrl!, fit: BoxFit.cover)
+              Image.network(
+                _sampleImageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
+                      const SizedBox(height: 8),
+                      Text('Sample image unavailable', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
+                    ],
+                  ),
+                ),
+              )
             else if (kIsWeb && _webImageBytes != null)
               Image.memory(_webImageBytes!, fit: BoxFit.cover)
             else if (_selectedImage != null)
               Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
 
+            // Subtle darkened vignette overlay for professional camera scanner feel
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.35),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.45),
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+            ),
+
             // Targeting Reticle (Corner Brackets)
             Positioned(
-              top: 30,
-              left: 30,
+              top: 28,
+              left: 28,
               child: _buildCorner(isTop: true, isLeft: true),
             ),
             Positioned(
-              top: 30,
-              right: 30,
+              top: 28,
+              right: 28,
               child: _buildCorner(isTop: true, isLeft: false),
             ),
             Positioned(
-              bottom: 30,
-              left: 30,
+              bottom: 28,
+              left: 28,
               child: _buildCorner(isTop: false, isLeft: true),
             ),
             Positioned(
-              bottom: 30,
-              right: 30,
+              bottom: 28,
+              right: 28,
               child: _buildCorner(isTop: false, isLeft: false),
             ),
+
+            // Center targeting crosshairs
+            Center(
+              child: Opacity(
+                opacity: hasImage ? 0.4 : 0.2,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 6,
+                      height: 6,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Reset image button when an image is loaded
+            if (hasImage)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Material(
+                  color: Colors.black54,
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                    tooltip: 'Clear image',
+                    onPressed: () {
+                      setState(() {
+                        _selectedImage = null;
+                        _sampleImageUrl = null;
+                        _webImageBytes = null;
+                      });
+                    },
+                  ),
+                ),
+              ),
 
             // Viewfinder Status Pill
             Positioned(
@@ -259,11 +347,20 @@ class _ScanScreenState extends State<ScanScreen> {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
+                    color: Colors.black.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(
+                      color: hasImage ? const Color(0xFF10B981).withValues(alpha: 0.5) : Colors.white24,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -271,14 +368,22 @@ class _ScanScreenState extends State<ScanScreen> {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: hasImage ? const Color(0xFF10B981) : const Color(0xFF52B788),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (hasImage ? const Color(0xFF10B981) : const Color(0xFF52B788)).withValues(alpha: 0.6),
+                              blurRadius: 6,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedImage != null || _sampleImageUrl != null
-                            ? 'Leaf Staged • Ready to Scan'
-                            : 'AI Vision Engine Active',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                        hasImage ? 'Leaf Ready • Tap Scan Below' : 'AI Vision Engine Active',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.2),
                       ),
                     ],
                   ),
@@ -293,14 +398,14 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Widget _buildCorner({required bool isTop, required bool isLeft}) {
     return Container(
-      width: 28,
-      height: 28,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         border: Border(
-          top: isTop ? const BorderSide(color: Color(0xFF10B981), width: 3) : BorderSide.none,
-          bottom: !isTop ? const BorderSide(color: Color(0xFF10B981), width: 3) : BorderSide.none,
-          left: isLeft ? const BorderSide(color: Color(0xFF10B981), width: 3) : BorderSide.none,
-          right: !isLeft ? const BorderSide(color: Color(0xFF10B981), width: 3) : BorderSide.none,
+          top: isTop ? const BorderSide(color: Color(0xFF10B981), width: 3.5) : BorderSide.none,
+          bottom: !isTop ? const BorderSide(color: Color(0xFF10B981), width: 3.5) : BorderSide.none,
+          left: isLeft ? const BorderSide(color: Color(0xFF10B981), width: 3.5) : BorderSide.none,
+          right: !isLeft ? const BorderSide(color: Color(0xFF10B981), width: 3.5) : BorderSide.none,
         ),
       ),
     );
@@ -335,13 +440,15 @@ class _ScanScreenState extends State<ScanScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.photo_library_outlined, size: 18),
-                      label: const Text('From Gallery'),
+                      icon: const Icon(Icons.photo_library_outlined, size: 20),
+                      label: const Text('From Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        side: BorderSide(color: Colors.grey.shade300),
+                        side: BorderSide(color: Colors.grey.shade300, width: 1.2),
+                        backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF1E293B),
+                        elevation: 0,
                       ),
                       onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.gallery),
                     ),
@@ -349,14 +456,15 @@ class _ScanScreenState extends State<ScanScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      icon: const Icon(Icons.camera_alt, size: 18),
-                      label: const Text('Take Photo'),
+                      icon: const Icon(Icons.camera_alt, size: 20),
+                      label: const Text('Take Photo', style: TextStyle(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryGreen,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
+                        elevation: 1,
+                        shadowColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       ),
                       onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.camera),
                     ),
@@ -366,34 +474,67 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Clean Mode Selector
+            // Clean Mode Selector (Target Crop)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Diagnosis Target:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.filter_vintage_outlined, size: 16, color: AppTheme.mediumGreen),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'TARGET CROP SPECIES',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: _crops.map((c) {
                         final isSelected = _selectedCrop == c;
-                        String label = c == 'AUTO' ? '✨ Auto-Detect' : c;
+                        String label = c == 'AUTO' ? '✨ Auto-Detect' : (c == 'Cassava' ? '🌿 Cassava' : '🫑 Pepper');
                         return ChoiceChip(
-                          label: Text(label, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                          label: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            ),
+                          ),
                           selected: isSelected,
                           selectedColor: AppTheme.paleGreen,
-                          labelStyle: TextStyle(color: isSelected ? AppTheme.primaryGreen : Colors.black87),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          side: BorderSide(color: isSelected ? AppTheme.primaryGreen : Colors.grey.shade300),
+                          backgroundColor: const Color(0xFFF8FAFC),
+                          labelStyle: TextStyle(
+                            color: isSelected ? AppTheme.primaryGreen : const Color(0xFF334155),
+                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          side: BorderSide(
+                            color: isSelected ? AppTheme.primaryGreen : Colors.grey.shade300,
+                            width: isSelected ? 1.5 : 1,
+                          ),
                           onSelected: (val) {
                             if (val) setState(() => _selectedCrop = c);
                           },
@@ -412,8 +553,22 @@ class _ScanScreenState extends State<ScanScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Quick Test Samples (Demo Focus: Cassava & Pepper):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
-                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.bolt, size: 16, color: AppTheme.earthYellow),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'QUICK DEMO PRESETS',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -486,17 +641,46 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildSamplePill(String title, String crop, double conf, bool blurry, String url) {
+    final bool isCurrentlySelected = _sampleImageUrl == url;
+
     return InkWell(
       onTap: () => _loadSample(crop, conf, blurry, url),
       borderRadius: BorderRadius.circular(14),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isCurrentlySelected ? AppTheme.paleGreen : Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: isCurrentlySelected ? AppTheme.primaryGreen : Colors.grey.shade200,
+            width: isCurrentlySelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isCurrentlySelected ? FontWeight.w700 : FontWeight.w600,
+                color: isCurrentlySelected ? AppTheme.primaryGreen : const Color(0xFF1E293B),
+              ),
+            ),
+            if (isCurrentlySelected) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.check_circle, size: 14, color: AppTheme.primaryGreen),
+            ],
+          ],
+        ),
       ),
     );
   }
