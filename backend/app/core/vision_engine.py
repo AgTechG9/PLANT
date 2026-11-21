@@ -137,15 +137,17 @@ class PlantVisionEngine:
             if hull_area > 0:
                 solidity = area / hull_area
 
-        # Auto-detect crop type based on leaf morphology:
-        # - Cassava: Palmate multi-lobed leaf (low solidity < 0.72 due to deep indentations between lobes)
-        # - Pepper: Simple ovate/elliptical leaf with smooth margin (high solidity > 0.80, aspect ratio ~1.5 - 2.5)
-        # - Maize: Long linear blade (aspect ratio > 3.2)
-        if user_selected_crop and user_selected_crop.upper() in ["CASSAVA", "PEPPER", "MAIZE"]:
+        # Auto-detect crop type based on leaf morphology (Strict Demo Focus: Cassava & Pepper):
+        # - Cassava: Palmate multi-lobed leaf (low solidity < 0.75 due to deep indentations between lobes)
+        # - Pepper: Simple ovate/elliptical leaf with smooth margin (high solidity > 0.75, aspect ratio ~1.5 - 2.5)
+        # - Other / Grasses: Long linear blade (aspect ratio > 3.0) -> Flagged unsupported (Rule SCAN-03)
+        if user_selected_crop and user_selected_crop.upper() in ["CASSAVA", "PEPPER"]:
+            detected_crop = user_selected_crop.title()
+        elif user_selected_crop and user_selected_crop.upper() not in ["AUTO", "", "NONE"]:
             detected_crop = user_selected_crop.title()
         else:
-            if aspect_ratio > 3.2:
-                detected_crop = "Maize"
+            if aspect_ratio > 3.0:
+                detected_crop = "Non-Target Crop (Elongated Leaf)"
             elif solidity < 0.75:
                 detected_crop = "Cassava"
             else:

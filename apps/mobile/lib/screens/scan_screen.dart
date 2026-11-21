@@ -30,7 +30,7 @@ class _ScanScreenState extends State<ScanScreen> {
   bool _simulateBlurry = false;
   double _simulatedConfidence = 0.88;
 
-  final List<String> _crops = ['AUTO', 'Cassava', 'Pepper', 'Maize'];
+  final List<String> _crops = ['AUTO', 'Cassava', 'Pepper'];
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -386,11 +386,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       runSpacing: 8,
                       children: _crops.map((c) {
                         final isSelected = _selectedCrop == c;
-                        String label = c == 'AUTO'
-                            ? '✨ Auto-Detect'
-                            : c == 'Maize'
-                                ? 'Maize (Safety Test)'
-                                : c;
+                        String label = c == 'AUTO' ? '✨ Auto-Detect' : c;
                         return ChoiceChip(
                           label: Text(label, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                           selected: isSelected,
@@ -410,13 +406,13 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Clean Pitch Sample Cards
+            // Clean Pitch Sample Cards (Cassava & Pepper Focus)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Quick Test Samples:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
+                  const Text('Quick Test Samples (Demo Focus: Cassava & Pepper):', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54)),
                   const SizedBox(height: 8),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -424,11 +420,13 @@ class _ScanScreenState extends State<ScanScreen> {
                       children: [
                         _buildSamplePill('🌿 Cassava CMD', 'Cassava', 0.92, false, 'https://images.unsplash.com/photo-1599818816942-e1c251d1847e?auto=format&fit=crop&w=600&q=80'),
                         const SizedBox(width: 8),
-                        _buildSamplePill('🫑 Pepper Leaf', 'Pepper', 0.88, false, 'https://images.unsplash.com/photo-1592417817098-8f3d6910985c?auto=format&fit=crop&w=600&q=80'),
+                        _buildSamplePill('🌿 Cassava Healthy', 'Cassava', 0.95, false, 'https://images.unsplash.com/photo-1599818816942-e1c251d1847e?auto=format&fit=crop&w=600&q=80'),
                         const SizedBox(width: 8),
-                        _buildSamplePill('🌽 Maize (Reject)', 'Maize', 0.10, false, 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=600&q=80'),
+                        _buildSamplePill('🫑 Pepper Anthracnose', 'Pepper', 0.91, false, 'https://images.unsplash.com/photo-1592417817098-8f3d6910985c?auto=format&fit=crop&w=600&q=80'),
                         const SizedBox(width: 8),
-                        _buildSamplePill('🌫️ Blurry (Escalate)', 'Cassava', 0.35, true, 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=600&q=80'),
+                        _buildSamplePill('🫑 Pepper Healthy', 'Pepper', 0.94, false, 'https://images.unsplash.com/photo-1592417817098-8f3d6910985c?auto=format&fit=crop&w=600&q=80'),
+                        const SizedBox(width: 8),
+                        _buildSamplePill('🌫️ Blurry Leaf (Rule SCAN-04)', 'Cassava', 0.35, true, 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=600&q=80'),
                       ],
                     ),
                   ),
