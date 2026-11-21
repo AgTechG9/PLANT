@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Plant.DesktopAdmin;
 
-string currentApiUrl = Environment.GetEnvironmentVariable("PLANT_API_URL") ?? "http://localhost:8000/api/v1";
+string currentApiUrl = Environment.GetEnvironmentVariable("PLANT_API_URL") ?? "https://plant-api-production-7a007e06.up.railway.app/api/v1";
 var client = new ApiClient(currentApiUrl);
 
 void PrintHeader()
@@ -618,7 +618,7 @@ while (true)
         Console.WriteLine($"Current API Target: {client.BaseUrl}");
         Console.WriteLine("\nPresets:");
         Console.WriteLine("  1. Local Development (http://localhost:8000/api/v1)");
-        Console.WriteLine("  2. Railway Production (https://plant-production.up.railway.app/api/v1)");
+        Console.WriteLine("  2. Railway Production (https://plant-api-production-7a007e06.up.railway.app/api/v1)");
         Console.WriteLine("  3. Custom URL");
         Console.Write("\nChoice (1-3): ");
 
@@ -629,7 +629,7 @@ while (true)
         }
         else if (cfg == "2")
         {
-            currentApiUrl = "https://plant-production.up.railway.app/api/v1";
+            currentApiUrl = "https://plant-api-production-7a007e06.up.railway.app/api/v1";
         }
         else if (cfg == "3")
         {

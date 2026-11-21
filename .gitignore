@@ -83,3 +83,7 @@ local_storage/
 !.vscode/extensions.json
 *.sublime-workspace
 *.swp
+
+# Training datasets (~800MB local files)
+backend/datasets/
+

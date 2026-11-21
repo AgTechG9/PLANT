@@ -294,7 +294,7 @@ public class ApiClient
     {
         BaseUrl = baseUrl 
             ?? Environment.GetEnvironmentVariable("PLANT_API_URL") 
-            ?? "http://localhost:8000/api/v1";
+            ?? "https://plant-api-production-7a007e06.up.railway.app/api/v1";
 
         if (!BaseUrl.EndsWith("/"))
         {
