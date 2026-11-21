@@ -23,6 +23,7 @@ class _ScanScreenState extends State<ScanScreen> {
   Uint8List? _webImageBytes;
   String _selectedCrop = 'Cassava';
   bool _isAnalyzing = false;
+  String? _sampleImageUrl;
 
   // Hackathon presentation simulation dials
   bool _simulateBlurry = false;
@@ -56,6 +57,17 @@ class _ScanScreenState extends State<ScanScreen> {
     } catch (e) {
       debugPrint('Error picking image: $e');
     }
+  }
+
+  void _loadSample(String crop, double conf, bool blurry, String imageUrl) {
+    setState(() {
+      _selectedCrop = crop;
+      _simulatedConfidence = conf;
+      _simulateBlurry = blurry;
+      _sampleImageUrl = imageUrl;
+      _selectedImage = null;
+      _webImageBytes = null;
+    });
   }
 
   void _runScan() async {
@@ -94,7 +106,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildImagePreview() {
-    if (_selectedImage == null) {
+    if (_selectedImage == null && _sampleImageUrl == null) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -106,6 +118,19 @@ class _ScanScreenState extends State<ScanScreen> {
             style: TextStyle(color: Colors.black54, fontSize: 14),
           ),
         ],
+      );
+    }
+
+    if (_sampleImageUrl != null && _selectedImage == null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.network(
+          _sampleImageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const Center(
+            child: Icon(Icons.eco, size: 64, color: Colors.green),
+          ),
+        ),
       );
     }
 
@@ -271,6 +296,75 @@ class _ScanScreenState extends State<ScanScreen> {
                       ),
                       onPressed: _isAnalyzing ? null : () => _pickImage(ImageSource.camera),
                     ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Or load a live pitch sample:',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      ActionChip(
+                        avatar: const Text('🌿', style: TextStyle(fontSize: 14)),
+                        label: const Text('Cassava CMD', style: TextStyle(fontSize: 11)),
+                        onPressed: _isAnalyzing
+                            ? null
+                            : () => _loadSample(
+                                  'Cassava',
+                                  0.92,
+                                  false,
+                                  'https://images.unsplash.com/photo-1599818816942-e1c251d1847e?auto=format&fit=crop&w=600&q=80',
+                                ),
+                      ),
+                      ActionChip(
+                        avatar: const Text('🫑', style: TextStyle(fontSize: 14)),
+                        label: const Text('Pepper Anthracnose', style: TextStyle(fontSize: 11)),
+                        onPressed: _isAnalyzing
+                            ? null
+                            : () => _loadSample(
+                                  'Pepper',
+                                  0.88,
+                                  false,
+                                  'https://images.unsplash.com/photo-1592417817098-8f3d6910985c?auto=format&fit=crop&w=600&q=80',
+                                ),
+                      ),
+                      ActionChip(
+                        avatar: const Text('🌽', style: TextStyle(fontSize: 14)),
+                        label: const Text('Maize (Rule SCAN-03)', style: TextStyle(fontSize: 11)),
+                        onPressed: _isAnalyzing
+                            ? null
+                            : () => _loadSample(
+                                  'Maize',
+                                  0.10,
+                                  false,
+                                  'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=600&q=80',
+                                ),
+                      ),
+                      ActionChip(
+                        avatar: const Text('🌫️', style: TextStyle(fontSize: 14)),
+                        label: const Text('Blurry Leaf (Rule SCAN-04)', style: TextStyle(fontSize: 11)),
+                        onPressed: _isAnalyzing
+                            ? null
+                            : () => _loadSample(
+                                  'Cassava',
+                                  0.34,
+                                  true,
+                                  'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=600&q=80',
+                                ),
+                      ),
+                    ],
                   ),
                 ],
               ),
