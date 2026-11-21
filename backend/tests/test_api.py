@@ -53,14 +53,26 @@ def test_farmer_directory_and_metrics():
     assert "Bong" in metrics["by_county"]
 
 def test_case_escalation_and_override():
-    # Fetch pending escalated cases (<65% or blurry)
+    # Ensure there is a farmer available
+    farmers_res = client.get("/api/v1/farmers")
+    assert farmers_res.status_code == 200
+    farmer_id = farmers_res.json()[0]["id"]
+
+    # Create a fresh pending escalation case with farmer_id
+    diag_res = client.post("/api/v1/diagnose", json={
+        "crop_type": "Cassava",
+        "is_blurry": False,
+        "simulated_confidence": 0.45,
+        "farmer_id": farmer_id
+    })
+    assert diag_res.status_code == 200
+    case_num = diag_res.json()["case_number"]
+
+    # Fetch the pending case
     res = client.get("/api/v1/cases?status=PENDING_ESCALATION")
     assert res.status_code == 200
     cases = res.json()
-    assert len(cases) > 0
-    
-    # Pick a case that has an associated farmer for SMS delivery
-    test_case = next((c for c in cases if c.get("farmer_id")), cases[0])
+    test_case = next(c for c in cases if c["case_number"] == case_num)
 
     # Resolve case as Extension Officer
     resolve_payload = {
@@ -128,3 +140,13 @@ def test_ai_safety_validator_low_confidence_rule_scan_04():
     assert data["status"] == "ESCALATED_LOW_CONFIDENCE"
     assert data["confidence_band"] == "LOW"
     assert "Rule SCAN-04" in data["message"]
+
+def test_county_weather():
+    res = client.get("/api/v1/weather")
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data) == 3
+    counties = [w["county"] for w in data]
+    assert "Bong" in counties
+    assert "Nimba" in counties
+    assert "Lofa" in counties

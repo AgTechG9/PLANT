@@ -10,13 +10,11 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -50,6 +48,21 @@ dist/
 build/
 .next/
 out/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+apps/mobile/build/
+!apps/mobile/lib/
+
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
 
 # Tauri
 src-tauri/target/

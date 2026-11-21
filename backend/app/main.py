@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.initial_data import seed_database
-from app.api.v1 import auth, upload, health, farmers, cases, knowledge, sms, ussd, diagnostics
+from app.api.v1 import auth, upload, health, farmers, cases, knowledge, sms, ussd, diagnostics, weather
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
@@ -50,6 +50,7 @@ app.include_router(knowledge.router, prefix=settings.API_V1_STR, tags=["Knowledg
 app.include_router(sms.router, prefix=settings.API_V1_STR, tags=["SMS & Broadcast"])
 app.include_router(ussd.router, prefix=settings.API_V1_STR, tags=["USSD Engine (*123#)"])
 app.include_router(diagnostics.router, prefix=settings.API_V1_STR, tags=["Diagnostics & Safety"])
+app.include_router(weather.router, prefix=settings.API_V1_STR, tags=["Agro-Met Weather"])
 
 @app.get("/")
 def root():

@@ -1,0 +1,6 @@
+@Plant.AdminApi_HostAddress = http://localhost:5218
+
+GET {{Plant.AdminApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
