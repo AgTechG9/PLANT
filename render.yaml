@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: plant-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        value: postgresql://postgres.cewomqasziwejjzjhykd:SpacyMonkeyThingy@aws-0-eu-west-1.pooler.supabase.com:6543/postgres
+      - key: SUPABASE_URL
+        value: https://cewomqasziwejjzjhykd.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNld29tcWFzeml3ZWpqempoeWtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNTUyNzgsImV4cCI6MjExMDgzMTI3OH0.hm7WXERDO6WVoH9LzVq81YXdM3LTvTGJiLloR5skejY
+      - key: SUPABASE_BUCKET_NAME
+        value: crop-scans
+      - key: CONFIDENCE_THRESHOLD_ESCALATION
+        value: 0.65
+      - key: CORS_ORIGINS
+        value: "*"
