@@ -1482,6 +1482,37 @@ async function runDiagnostic(crop) {
   } else {
     const confPct = (res.confidence_score * 100).toFixed(0);
     const confClass = res.confidence_score >= 0.65 ? 'high' : res.confidence_score >= 0.4 ? 'med' : 'low';
+
+    let audioHtml = '';
+    if (res.audio_advisories) {
+      const adv = res.audio_advisories;
+      const koloquaUrl = adv.koloqua ? adv.koloqua.url : '';
+      const kpelleUrl = adv.kpelle ? adv.kpelle.url : '';
+      audioHtml = `
+        <div style="margin-top:16px; padding:14px; background:rgba(46,125,50,0.12); border:1px solid var(--growth-green); border-radius:var(--radius-xs); text-align:left;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:18px;">🎙️</span>
+            <div>
+              <strong style="color:var(--harvest-gold); font-size:13px;">Local Dialect Spoken Advisory</strong>
+              <div style="font-size:11px; color:var(--text-muted);">Listen to step-by-step guidance spoken in local dialects</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="playDialectAudio('${koloquaUrl}', 'Liberian English (Koloqua)')">
+              🔊 Play Liberian English
+            </button>
+            <button type="button" class="btn btn-sm btn-gold" onclick="playDialectAudio('${kpelleUrl}', 'Kpelle')">
+              🔊 Play Kpelle
+            </button>
+          </div>
+          <div id="audio-player-container" style="display:none; margin-top:8px;">
+            <div id="audio-playing-label" style="font-size:11px; color:var(--harvest-gold); margin-bottom:4px; font-weight:600;"></div>
+            <audio id="active-diagnostic-audio" controls style="width:100%; height:36px;"></audio>
+          </div>
+        </div>
+      `;
+    }
+
     area.innerHTML = `
       <div class="diag-result supported">
         <div class="diag-icon">✅</div>
@@ -1491,11 +1522,25 @@ async function runDiagnostic(crop) {
           <div class="kpi green" style="padding:12px;"><div class="kpi-value" style="font-size:20px;">${confPct}%</div><div class="kpi-label">Confidence</div><div class="kpi-sub">${res.confidence_band}</div></div>
           <div class="kpi gold" style="padding:12px;"><div class="kpi-value" style="font-size:20px;">${escHtml(res.severity)}</div><div class="kpi-label">Severity</div><div class="kpi-sub">${escHtml(res.knowledge_doc_id || 'N/A')}</div></div>
         </div>
+        ${audioHtml}
         <div style="margin-top:16px; padding:12px; background:var(--bg); border-radius:var(--radius-xs); text-align:left; font-size:12px; color:var(--text-muted); line-height:1.6;">
           <strong>Case:</strong> ${escHtml(res.case_number || 'N/A')} · <strong>Crop:</strong> ${escHtml(res.crop_type)}
           <br><strong>Engine:</strong> ${escHtml(res.message)}
         </div>
       </div>`;
+  }
+}
+
+function playDialectAudio(url, dialectName) {
+  if (!url) return;
+  const container = document.getElementById('audio-player-container');
+  const label = document.getElementById('audio-playing-label');
+  const player = document.getElementById('active-diagnostic-audio');
+  if (container && player) {
+    container.style.display = 'block';
+    label.textContent = '🔊 Playing advisory in ' + dialectName;
+    player.src = url;
+    player.play().catch(e => console.log('Audio playback notification:', e));
   }
 }
 

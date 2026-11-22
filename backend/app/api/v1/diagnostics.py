@@ -62,6 +62,37 @@ DIAGNOSIS_CATALOG = {
     }
 }
 
+AUDIO_ADVISORIES = {
+    "Cassava": {
+        "koloqua": {
+            "dialect": "Liberian English (Koloqua)",
+            "url": "/audio/cassava_koloqua.m4a",
+            "filename": "local English language cassava.m4a",
+            "description": "Step-by-step guidance spoken in Liberian English (Koloqua)."
+        },
+        "kpelle": {
+            "dialect": "Kpelle (Bong & Lofa)",
+            "url": "/audio/cassava_kpelle.m4a",
+            "filename": "Kpelleh Cassava.m4a",
+            "description": "Step-by-step guidance spoken in Kpelle."
+        }
+    },
+    "Pepper": {
+        "koloqua": {
+            "dialect": "Liberian English (Koloqua)",
+            "url": "/audio/pepper_koloqua.m4a",
+            "filename": "local English language Pepper.m4a",
+            "description": "Step-by-step guidance spoken in Liberian English (Koloqua)."
+        },
+        "kpelle": {
+            "dialect": "Kpelle (Bong & Lofa)",
+            "url": "/audio/pepper_kpelle.m4a",
+            "filename": "Pepper Kpelleh.m4a",
+            "description": "Step-by-step guidance spoken in Kpelle."
+        }
+    }
+}
+
 class DiagnosticRequest(BaseModel):
     crop_type: Optional[str] = "AUTO"
     image_url: Optional[str] = None
@@ -80,9 +111,20 @@ class DiagnosticResponse(BaseModel):
     diagnosis: str
     severity: str
     knowledge_doc_id: Optional[str]
-    vetted_advice: Dict[str, str]
+    vetted_advice: Dict[str, Any]
     message: str
     vision_metrics: Optional[Dict[str, Any]] = None
+    audio_advisories: Optional[Dict[str, Any]] = None
+
+@router.get("/audio-advisories")
+def get_audio_advisories():
+    """List available CARI voice guidance audios in Liberian English and Kpelle."""
+    return {
+        "status": "success",
+        "supported_crops": ["Cassava", "Pepper"],
+        "dialects": ["Liberian English (Koloqua)", "Kpelle (Bong & Lofa)"],
+        "advisories": AUDIO_ADVISORIES
+    }
 
 @router.post("/diagnose", response_model=DiagnosticResponse)
 def run_diagnostic(payload: DiagnosticRequest, db: Session = Depends(get_db)):
@@ -189,6 +231,9 @@ def run_diagnostic(payload: DiagnosticRequest, db: Session = Depends(get_db)):
     else:
         band = "LOW"
 
+    # Extract Audio Advisories (Liberian English / Kpelle)
+    audios = AUDIO_ADVISORIES.get(crop_clean)
+
     # RULE SCAN-04 & ESCALATION: If confidence < 0.65, abstain & auto-escalate
     if conf < settings.CONFIDENCE_THRESHOLD_ESCALATION:
         case = ScanCase(
@@ -220,10 +265,13 @@ def run_diagnostic(payload: DiagnosticRequest, db: Session = Depends(get_db)):
                 "notice": "Confidence is below 65%. The AI abstains from prescribing direct chemical action.",
                 "cultural_control": diag_details.get("cultural", "Inspect adjacent plants."),
                 "chemical_control": "Pending verification by County Agricultural Extension Officer.",
-                "escalation": f"Case {case_num} escalated to Extension Officer review desk."
+                "escalation": f"Case {case_num} escalated to Extension Officer review desk.",
+                "audio_koloqua": audios["koloqua"]["url"] if audios else "",
+                "audio_kpelle": audios["kpelle"]["url"] if audios else "",
             },
             message=f"Rule SCAN-04 Triggered: Confidence ({int(conf*100)}%) < 65%. Automatically escalated to Desktop Admin Workstation.",
-            vision_metrics=vision_result.get("metrics") if vision_result else None
+            vision_metrics=vision_result.get("metrics") if vision_result else None,
+            audio_advisories=audios
         )
 
     # High / Medium confidence -> Auto-verified case logged
@@ -256,8 +304,11 @@ def run_diagnostic(payload: DiagnosticRequest, db: Session = Depends(get_db)):
             "symptoms": diag_details.get("symptoms", "Foliar discoloration observed."),
             "cultural_control": diag_details.get("cultural", "Prune diseased foliage and maintain airflow."),
             "chemical_control": diag_details.get("chemical", "Apply recommended botanical or copper spray."),
-            "source": f"Grounded in CARI Extension Guide ({doc_id})"
+            "source": f"Grounded in CARI Extension Guide ({doc_id})",
+            "audio_koloqua": audios["koloqua"]["url"] if audios else "",
+            "audio_kpelle": audios["kpelle"]["url"] if audios else "",
         },
         message=f"Vision model identified {crop_clean} with {band} confidence ({int(conf*100)}%).",
-        vision_metrics=vision_result.get("metrics") if vision_result else None
+        vision_metrics=vision_result.get("metrics") if vision_result else None,
+        audio_advisories=audios
     )

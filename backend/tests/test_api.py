@@ -150,3 +150,24 @@ def test_county_weather():
     assert "Bong" in counties
     assert "Nimba" in counties
     assert "Lofa" in counties
+
+def test_audio_advisories_catalog():
+    res = client.get("/api/v1/audio-advisories")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert "Cassava" in data["advisories"]
+    assert "Pepper" in data["advisories"]
+    assert "koloqua" in data["advisories"]["Cassava"]
+    assert "kpelle" in data["advisories"]["Cassava"]
+
+def test_audio_advisories_in_diagnose():
+    res = client.post("/api/v1/diagnose", json={"crop_type": "Cassava"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["audio_advisories"] is not None
+    assert "audio_koloqua" in data["vetted_advice"]
+    assert "audio_kpelle" in data["vetted_advice"]
+    # Verify static audio stream endpoint returns 200
+    audio_res = client.get(data["vetted_advice"]["audio_koloqua"])
+    assert audio_res.status_code == 200

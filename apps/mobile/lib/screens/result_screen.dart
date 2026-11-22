@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/diagnostic_result.dart';
+import '../services/api_service.dart';
+import '../services/audio_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final DiagnosticResult result;
@@ -17,13 +19,12 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  String _selectedDialect = 'Simple Liberian English';
+  String _selectedDialect = 'Liberian English (Koloqua)';
   bool _isPlayingAudio = false;
 
   final List<String> _dialects = [
-    'Simple Liberian English',
+    'Liberian English (Koloqua)',
     'Kpelle (Bong & Lofa)',
-    'Bassa (Grand Bassa & Margibi)',
   ];
 
   Color _getConfidenceColor() {
@@ -56,35 +57,96 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  String? _getAudioUrl() {
+    final crop = widget.result.cropType.toLowerCase();
+    final isKpelle = _selectedDialect.toLowerCase().contains('kpelle');
+
+    final audioKey = isKpelle ? 'audio_kpelle' : 'audio_koloqua';
+    if (widget.result.vettedAdvice.containsKey(audioKey) &&
+        widget.result.vettedAdvice[audioKey] != null &&
+        widget.result.vettedAdvice[audioKey].toString().isNotEmpty) {
+      final rawUrl = widget.result.vettedAdvice[audioKey].toString();
+      if (rawUrl.startsWith('http')) return rawUrl;
+      final uri = Uri.parse(ApiService.baseUrl);
+      final portPart = uri.hasPort && uri.port != 80 && uri.port != 443 ? ':${uri.port}' : '';
+      return '${uri.scheme}://${uri.host}$portPart$rawUrl';
+    }
+
+    final baseAudioUrl = ApiService.baseUrl.replaceAll('/api/v1', '');
+    if (crop.contains('cassava')) {
+      return isKpelle
+          ? '$baseAudioUrl/audio/cassava_kpelle.m4a'
+          : '$baseAudioUrl/audio/cassava_koloqua.m4a';
+    } else if (crop.contains('pepper')) {
+      return isKpelle
+          ? '$baseAudioUrl/audio/pepper_kpelle.m4a'
+          : '$baseAudioUrl/audio/pepper_koloqua.m4a';
+    }
+    return null;
+  }
+
   void _toggleAudio() {
-    setState(() => _isPlayingAudio = !_isPlayingAudio);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              _isPlayingAudio ? Icons.volume_up_rounded : Icons.pause_circle_outline,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _isPlayingAudio
-                    ? 'Playing voice guidance in $_selectedDialect...'
-                    : 'Voice guidance paused.',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
-          ],
+    if (_isPlayingAudio) {
+      AudioPlayerService.instance.stop();
+      setState(() => _isPlayingAudio = false);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.pause_circle_outline, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Voice guidance paused.', style: TextStyle(fontWeight: FontWeight.w500)),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: Colors.grey.shade800,
         ),
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        backgroundColor: AppTheme.primaryGreen,
-      ),
-    );
+      );
+    } else {
+      final url = _getAudioUrl();
+      if (url == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Audio advisory not available for this crop.')),
+        );
+        return;
+      }
+
+      AudioPlayerService.instance.play(url, onComplete: () {
+        if (mounted) setState(() => _isPlayingAudio = false);
+      });
+      setState(() => _isPlayingAudio = true);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.volume_up_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Playing voice guidance in $_selectedDialect...',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: AppTheme.primaryGreen,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    AudioPlayerService.instance.stop();
+    super.dispose();
   }
 
   @override

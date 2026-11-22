@@ -34,10 +34,15 @@ app = FastAPI(
     redoc_url=f"{settings.API_V1_STR}/redoc",
 )
 
-# Static files for uploaded crop images
+# Static files for uploaded crop images and local dialect voice guidance
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+AUDIO_DIR = os.path.join(os.path.dirname(__file__), "static", "audio")
+os.makedirs(AUDIO_DIR, exist_ok=True)
+app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
+app.mount("/static/audio", StaticFiles(directory=AUDIO_DIR), name="static_audio")
 
 # CORS configuration
 app.add_middleware(
