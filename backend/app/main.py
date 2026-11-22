@@ -44,6 +44,11 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 app.mount("/static/audio", StaticFiles(directory=AUDIO_DIR), name="static_audio")
 
+STATIC_WEB_DIR = os.path.join(os.path.dirname(__file__), "static", "web")
+if os.path.exists(STATIC_WEB_DIR):
+    app.mount("/farmer", StaticFiles(directory=STATIC_WEB_DIR, html=True), name="farmer")
+    app.mount("/app", StaticFiles(directory=STATIC_WEB_DIR, html=True), name="app")
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
